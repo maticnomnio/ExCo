@@ -41,169 +41,104 @@ def set_font(lexer: Any, style_name: str, style_options: dict[str, Any]) -> None
     )
 
 
+_FILE_TYPE_LEXER_MAP = None
+_COMMENT_STYLE_MAP = None
+
+
+def _ensure_maps():
+    global _FILE_TYPE_LEXER_MAP, _COMMENT_STYLE_MAP
+    if _FILE_TYPE_LEXER_MAP is not None:
+        return
+    _FILE_TYPE_LEXER_MAP = {
+        "python": lambda: lexers.CustomPython() if lexers.nim_lexers_found else lexers.Python(),
+        "cython": lambda: lexers.Cython(),
+        "c": lambda: lexers.CPP(),
+        "c++": lambda: lexers.CPP(),
+        "cmake": lambda: lexers.CMake(),
+        "pascal": lambda: lexers.Pascal(),
+        "oberon/modula": lambda: lexers.Oberon(),
+        "ada": lambda: lexers.Ada(),
+        "d": lambda: lexers.D(),
+        "nim": lambda: lexers.Nim(),
+        "makefile": lambda: lexers.Makefile(),
+        "xml": lambda: lexers.XML(),
+        "batch": lambda: lexers.Batch(),
+        "bash": lambda: lexers.Bash(),
+        "lua": lambda: lexers.Lua(),
+        "c#": lambda: lexers.CPP(),
+        "java": lambda: lexers.Java(),
+        "javascript": lambda: lexers.JavaScript(),
+        "octave": lambda: lexers.Octave(),
+        "routeros": lambda: lexers.RouterOS(),
+        "sql": lambda: lexers.SQL(),
+        "postscript": lambda: lexers.PostScript(),
+        "php": lambda: lexers.Php(),
+        "fortran": lambda: lexers.Fortran(),
+        "fortran77": lambda: lexers.Fortran77(),
+        "idl": lambda: lexers.IDL(),
+        "ruby": lambda: lexers.Ruby(),
+        "html": lambda: lexers.HTML(),
+        "css": lambda: lexers.CSS(),
+        "awk": lambda: lexers.AWK(),
+        "cicode": lambda: lexers.CiCode(),
+        "spice": lambda: lexers.Spice(),
+        "skill": lambda: lexers.SKILL(),
+        "smallbasic": lambda: lexers.SmallBasic(),
+        "yaml": lambda: lexers.YAML(),
+        "zig": lambda: lexers.Zig(),
+        "rust": lambda: lexers.Rust(),
+        "go": lambda: lexers.Go(),
+    }
+    _COMMENT_STYLE_MAP = {
+        lexers.CustomPython: (False, "#", None),
+        lexers.Python: (False, "#", None),
+        lexers.Cython: (False, "#", None),
+        lexers.AWK: (False, "#", None),
+        lexers.CPP: (False, "//", None),
+        lexers.CiCode: (False, "//", None),
+        lexers.Pascal: (False, "//", None),
+        lexers.Oberon: (True, "(*", "*)"),
+        lexers.Ada: (False, "--", None),
+        lexers.D: (False, "//", None),
+        lexers.Nim: (False, "#", None),
+        lexers.Makefile: (False, "#", None),
+        lexers.XML: (False, None, None),
+        lexers.Batch: (False, "::", None),
+        lexers.Bash: (False, "#", None),
+        lexers.Lua: (False, "--", None),
+        lexers.Java: (False, "//", None),
+        lexers.JavaScript: (False, "//", None),
+        lexers.Octave: (False, "#", None),
+        lexers.RouterOS: (False, "#", None),
+        lexers.SQL: (False, "#", None),
+        lexers.Spice: (False, "*", None),
+        lexers.SKILL: (False, ";", None),
+        lexers.SmallBasic: (False, "'", None),
+        lexers.PostScript: (False, "%", None),
+        lexers.Fortran: (False, "c ", None),
+        lexers.Fortran77: (False, "c ", None),
+        lexers.IDL: (False, "//", None),
+        lexers.Ruby: (False, "#", None),
+        lexers.HTML: (True, "<!--", "-->"),
+        lexers.CSS: (True, "/*", "*/"),
+        lexers.Zig: (False, "//", None),
+        lexers.Rust: (False, "//", None),
+        lexers.Go: (False, "//", None),
+    }
+
+
 def get_lexer_from_file_type(file_type):
+    _ensure_maps()
     current_file_type = file_type
-    lexer = None
-    if file_type == "python":
-        if lexers.nim_lexers_found == True:
-            lexer = lexers.CustomPython()
-        else:
-            lexer = lexers.Python()
-    elif file_type == "cython":
-        lexer = lexers.Cython()
-    elif file_type == "c":
-        lexer = lexers.CPP()
-    elif file_type == "c++":
-        lexer = lexers.CPP()
-    elif file_type == "cmake":
-        lexer = lexers.CMake()
-    elif file_type == "pascal":
-        lexer = lexers.Pascal()
-    elif file_type == "oberon/modula":
-        lexer = lexers.Oberon()
-    elif file_type == "ada":
-        lexer = lexers.Ada()
-    elif file_type == "d":
-        lexer = lexers.D()
-    elif file_type == "nim":
-        lexer = lexers.Nim()
-    elif file_type == "makefile":
-        lexer = lexers.Makefile()
-    # lexer = lexers.treesittermake.TreeSitterMakefile("Make", "make")
-    elif file_type == "xml":
-        lexer = lexers.XML()
-    elif file_type == "batch":
-        lexer = lexers.Batch()
-    elif file_type == "bash":
-        lexer = lexers.Bash()
-    elif file_type == "lua":
-        lexer = lexers.Lua()
-    elif file_type == "c#":
-        lexer = lexers.CPP()
-    elif file_type == "java":
-        lexer = lexers.Java()
-    elif file_type == "javascript":
-        lexer = lexers.JavaScript()
-    elif file_type == "octave":
-        lexer = lexers.Octave()
-    elif file_type == "routeros":
-        lexer = lexers.RouterOS()
-    elif file_type == "sql":
-        lexer = lexers.SQL()
-    elif file_type == "postscript":
-        lexer = lexers.PostScript()
-    elif file_type == "php":
-        lexer = lexers.Php()
-    elif file_type == "fortran":
-        lexer = lexers.Fortran()
-    elif file_type == "fortran77":
-        lexer = lexers.Fortran77()
-    elif file_type == "idl":
-        lexer = lexers.IDL()
-    elif file_type == "ruby":
-        lexer = lexers.Ruby()
-    elif file_type == "html":
-        lexer = lexers.HTML()
-    elif file_type == "css":
-        lexer = lexers.CSS()
-    elif file_type == "awk":
-        lexer = lexers.AWK()
-    elif file_type == "cicode":
-        lexer = lexers.CiCode()
-    elif file_type == "spice":
-        lexer = lexers.Spice()
-    elif file_type == "skill":
-        lexer = lexers.SKILL()
-    elif file_type == "smallbasic":
-        lexer = lexers.SmallBasic()
-    elif file_type == "yaml":
-        lexer = lexers.YAML()
-    elif file_type == "zig":
-        lexer = lexers.Zig()
-    elif file_type == "rust":
-        lexer = lexers.Rust()
+    factory = _FILE_TYPE_LEXER_MAP.get(file_type)
+    if factory is not None:
+        lexer = factory()
     else:
-        # No lexer was chosen, set file type to text and lexer to plain text
         current_file_type = "TEXT"
         lexer = lexers.Text()
     return (current_file_type, lexer)
 
 
 def get_comment_style_for_lexer(lexer):
-    open_close_comment_style = False
-    comment_string = None
-    end_comment_string = None
-    if isinstance(lexer, lexers.CustomPython):
-        comment_string = "#"
-    elif isinstance(lexer, lexers.Python):
-        comment_string = "#"
-    elif isinstance(lexer, lexers.Cython):
-        comment_string = "#"
-    elif isinstance(lexer, lexers.AWK):
-        comment_string = "#"
-    elif isinstance(lexer, lexers.CPP):
-        comment_string = "//"
-    elif isinstance(lexer, lexers.CiCode):
-        comment_string = "//"
-    elif isinstance(lexer, lexers.Pascal):
-        comment_string = "//"
-    elif isinstance(lexer, lexers.Oberon):
-        open_close_comment_style = True
-        comment_string = "(*"
-        end_comment_string = "*)"
-    elif isinstance(lexer, lexers.Ada):
-        comment_string = "--"
-    elif isinstance(lexer, lexers.D):
-        comment_string = "//"
-    elif isinstance(lexer, lexers.Nim):
-        comment_string = "#"
-    elif isinstance(lexer, lexers.Makefile):
-        comment_string = "#"
-    elif isinstance(lexer, lexers.XML):
-        comment_string = None
-    elif isinstance(lexer, lexers.Batch):
-        comment_string = "::"
-    elif isinstance(lexer, lexers.Bash):
-        comment_string = "#"
-    elif isinstance(lexer, lexers.Lua):
-        comment_string = "--"
-    elif isinstance(lexer, lexers.Java):
-        comment_string = "//"
-    elif isinstance(lexer, lexers.JavaScript):
-        comment_string = "//"
-    elif isinstance(lexer, lexers.Octave):
-        comment_string = "#"
-    elif isinstance(lexer, lexers.RouterOS):
-        comment_string = "#"
-    elif isinstance(lexer, lexers.SQL):
-        comment_string = "#"
-    elif isinstance(lexer, lexers.Spice):
-        comment_string = "*"
-    elif isinstance(lexer, lexers.SKILL):
-        comment_string = ";"
-    elif isinstance(lexer, lexers.SmallBasic):
-        comment_string = "'"
-    elif isinstance(lexer, lexers.PostScript):
-        comment_string = "%"
-    elif isinstance(lexer, lexers.Fortran):
-        comment_string = "c "
-    elif isinstance(lexer, lexers.Fortran77):
-        comment_string = "c "
-    elif isinstance(lexer, lexers.IDL):
-        comment_string = "//"
-    elif isinstance(lexer, lexers.Ruby):
-        comment_string = "#"
-    elif isinstance(lexer, lexers.HTML):
-        open_close_comment_style = True
-        comment_string = "<!--"
-        end_comment_string = "-->"
-    elif isinstance(lexer, lexers.CSS):
-        open_close_comment_style = True
-        comment_string = "/*"
-        end_comment_string = "*/"
-    elif isinstance(lexer, lexers.Zig):
-        comment_string = "//"
-    elif isinstance(lexer, lexers.Rust):
-        comment_string = "//"
-    # Save the comment options to the lexer
-    return (open_close_comment_style, comment_string, end_comment_string)
+    _ensure_maps()
+    return _COMMENT_STYLE_MAP.get(type(lexer), (False, None, None))

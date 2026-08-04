@@ -30,9 +30,7 @@ class ReplLineEdit(qt.QLineEdit):
     """
 
     # Class variables  (class variables >> this means that these variables are shared accross instances of this class, until you assign a new value to them, then they become instance variables)
-    __interpreter: interpreter.CustomInterpreter = (
-        None  # Custom interpreter used with the REPL
-    )
+    __interpreter: interpreter.CustomInterpreter = None  # Custom interpreter used with the REPL
     __language: constants.ReplLanguage = None  # Language used by the interpreter
     # List of characters to use for splitting the compare string for sequences. Minus (-) was taken out because it can appear in path names
     _comparison_list = [".", "(", " ", "+", "-", "*", "%", ",", '"', "'"]
@@ -82,20 +80,20 @@ class ReplLineEdit(qt.QLineEdit):
         # Load history from the file
         self._history_file_path = settings.get("repl_history_filename_with_path")
         self._input_buffer_load()
-    
+
     def _input_buffer_load(self):
         """Load the input buffer list from the static history text file."""
         if not os.path.exists(self._history_file_path):
             return
 
         try:
-            with open(self._history_file_path, 'r', encoding='utf-8') as f:
+            with open(self._history_file_path, "r", encoding="utf-8") as f:
                 # Read all lines, strip leading/trailing whitespace/newlines
                 history_list = [line.strip() for line in f if line.strip()]
-                
+
                 # Only keep the N most recent lines in memory for performance
                 if len(history_list) > self._MAX_HISTORY_LINES:
-                    history_list = history_list[-self._MAX_HISTORY_LINES:]
+                    history_list = history_list[-self._MAX_HISTORY_LINES :]
 
                 self._input_buffer["list"] = history_list
                 self.main_form.display.write_to_statusbar(
@@ -233,17 +231,11 @@ QLineEdit[indicated=true] {{
                 repl_messages.parent().setCurrentIndex(current_rm_index)
         # Evaluate the REPL text and store the result
         if self.__language == constants.ReplLanguage.Python:
-            eval_return = self.__interpreter.eval_command(
-                current_command, display_action
-            )
+            eval_return = self.__interpreter.eval_command(current_command, display_action)
         elif self.__language == constants.ReplLanguage.Hy:
-            eval_return = self.__interpreter.eval_command_hy(
-                current_command, display_action
-            )
+            eval_return = self.__interpreter.eval_command_hy(current_command, display_action)
         else:
-            raise Exception(
-                "Unsupported interpreter language: {}".format(self.__language)
-            )
+            raise Exception("Unsupported interpreter language: {}".format(self.__language))
         # Save text into the input buffer
         self._input_buffer_add(self.text())
         # Clear the REPL text
@@ -330,22 +322,22 @@ QLineEdit[indicated=true] {{
 
     def _input_buffer_add(self, entry):
         """Add a single value to the input buffer and append it to the history file."""
-        
+
         # Check if there is any input text
         if entry == "":
             return
-            
-        # Check if the last saved input is the same as the current input, 
+
+        # Check if the last saved input is the same as the current input,
         # otherwise add it to the input buffer
         if len(self._input_buffer["list"]) > 0:
             if entry != self._input_buffer["list"][-1]:
                 self._input_buffer["list"].append(entry)
-                self.__input_buffer_append_file(entry) # ADDED: Append to file
+                self.__input_buffer_append_file(entry)  # ADDED: Append to file
         else:
             # Add the text into the buffer when it's empty
             self._input_buffer["list"].append(entry)
-            self.__input_buffer_append_file(entry) # ADDED: Append to file
-            
+            self.__input_buffer_append_file(entry)  # ADDED: Append to file
+
         # Keep the in-memory buffer size limited
         if len(self._input_buffer["list"]) > self._MAX_HISTORY_LINES:
             del self._input_buffer["list"][0]
@@ -353,13 +345,13 @@ QLineEdit[indicated=true] {{
         # Reset the item counter and current input text
         self._input_buffer["count"] = 0
         self._input_buffer["current_input"] = ""
-    
+
     def __input_buffer_append_file(self, entry):
         """Append a single entry to the history file for fast persistence."""
         try:
             # Open file in append mode ('a')
-            with open(self._history_file_path, 'a', encoding='utf-8') as f:
-                f.write(entry + '\n')
+            with open(self._history_file_path, "a", encoding="utf-8") as f:
+                f.write(entry + "\n")
         except IOError as e:
             # Handle file write errors gracefully
             self.main_form.display.repl_display_error(f"Error appending REPL history to file: {e}")
@@ -414,9 +406,7 @@ QLineEdit[indicated=true] {{
             for ref in self._list_second_level_completions:
                 if ref.startswith(previous_sequence + "." + current_sequence):
                     # Autocompletion found, delete the part of the autocompletion that is already written
-                    found_list.append(
-                        ref.replace(previous_sequence + "." + current_sequence, "")
-                    )
+                    found_list.append(ref.replace(previous_sequence + "." + current_sequence, ""))
         else:
             # Test if autocompletion is a path or an object
             if "/" in current_sequence or "\\" in current_sequence:
@@ -448,9 +438,7 @@ QLineEdit[indicated=true] {{
 
     def event(self, event):
         """Rereferenced/overloaded main QWidget event, that is executed before all other events of the widget"""
-        if (event.type() == qt.QEvent.Type.KeyPress) and (
-            event.key() == qt.Qt.Key.Key_Tab
-        ):
+        if (event.type() == qt.QEvent.Type.KeyPress) and (event.key() == qt.Qt.Key.Key_Tab):
             self._cycle_autocompletion()
             return True
         return qt.QLineEdit.event(self, event)
@@ -557,18 +545,14 @@ QLineEdit[indicated=true] {{
     REPL interactive interpreter functions
     """
 
-    def interpreter_update_references(
-        self, new_references, first_level_list, second_level_list
-    ):
+    def interpreter_update_references(self, new_references, first_level_list, second_level_list):
         """Update the references that can be accessed by the interactive interpreter"""
         # Update the interpreter with the new locals
         self.__interpreter.update_locals(new_references)
         self._list_first_level_completions = first_level_list
         self._list_second_level_completions = second_level_list
         # Extend the primary autocompletion with the useful custom interpreter methods
-        self._list_first_level_completions.extend(
-            self.__interpreter.get_default_references()
-        )
+        self._list_first_level_completions.extend(self.__interpreter.get_default_references())
         # Extend the primary autocompletion with the regular expression dictionary of the REPL CustomInterpreter
         self._list_first_level_completions.extend(self.__interpreter.dict_re_references)
         # The keyword dictionary is different from the references, look in the interpreter module
@@ -578,12 +562,8 @@ QLineEdit[indicated=true] {{
         ]
         self._list_first_level_completions.extend(ext_first_level)
         # Convert lists to sets and back to remove duplicates
-        self._list_first_level_completions = list(
-            set(self._list_first_level_completions)
-        )
-        self._list_second_level_completions = list(
-            set(self._list_second_level_completions)
-        )
+        self._list_first_level_completions = list(set(self._list_first_level_completions))
+        self._list_second_level_completions = list(set(self._list_second_level_completions))
         # Sort the new lists alphabetically
         self._list_first_level_completions.sort()
         self._list_second_level_completions.sort()
@@ -594,22 +574,16 @@ QLineEdit[indicated=true] {{
         # Extend the primary autocompletions
         self._list_first_level_completions.extend(new_references)
         # Convert list to set and back to remove duplicates
-        self._list_first_level_completions = list(
-            set(self._list_first_level_completions)
-        )
+        self._list_first_level_completions = list(set(self._list_first_level_completions))
         # Sort the new lists alphabetically
         self._list_first_level_completions.sort()
 
-    def interpreter_reset_references(
-        self, new_references, first_level_list, second_level_list
-    ):
+    def interpreter_reset_references(self, new_references, first_level_list, second_level_list):
         """Clear all of the interpreter references and update them with the new ones"""
         # Clear the references
         self.__interpreter.reset_locals
         # Update the references
-        self.interpreter_update_references(
-            new_references, first_level_list, second_level_list
-        )
+        self.interpreter_update_references(new_references, first_level_list, second_level_list)
 
     def interpreter_update_windows(self, main, upper, lower):
         """Update the Main, Upper and Lower window references of the interpreter"""
@@ -645,9 +619,7 @@ QLineEdit[indicated=true] {{
             # Evaluate REPL text
             self._repl_eval()
         else:
-            self.main_form.display.write_to_statusbar(
-                "No commands in REPL input buffer!", 1000
-            )
+            self.main_form.display.write_to_statusbar("No commands in REPL input buffer!", 1000)
 
     def external_eval_request(self, eval_string, calling_widget):
         """An external evaluation request from the ReplHelper or another widget"""

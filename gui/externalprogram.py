@@ -9,7 +9,6 @@ For complete license information of the dependencies, check the 'additional_lice
 import os
 import time
 import subprocess
-import psutil
 
 import qt
 import data
@@ -18,10 +17,6 @@ import functions
 import components
 
 if data.platform == "Windows":
-    import win32api
-    import win32con
-    import win32gui
-    import win32process
 
     class ExternalWidget(qt.QWidget):
         handle_cache = []
@@ -42,12 +37,8 @@ if data.platform == "Windows":
             self._parent = parent
             self.main_form = main_form
 
-            self.current_icon = functions.create_icon(
-                "tango_icons/utilities-terminal.png"
-            )
-            self.internals = components.internals.Internals(
-                parent=self, tab_widget=parent
-            )
+            self.current_icon = functions.create_icon("tango_icons/utilities-terminal.png")
+            self.internals = components.internals.Internals(parent=self, tab_widget=parent)
             self.internals.update_icon(self)
 
             self.update_style()
@@ -132,6 +123,11 @@ if data.platform == "Windows":
         return main_widget
 
     def find_window_for_pid(pid):
+        import win32api
+        import win32con
+        import win32gui
+        import win32process
+
         result = None
 
         def callback(hwnd, _):
@@ -167,6 +163,8 @@ if data.platform == "Windows":
         #    program = "cmd.exe"
         #    program = "powershell.exe"
         name = os.path.basename(program)
+
+        import psutil
 
         # Old PID's, if any for the application
         old_pids = []

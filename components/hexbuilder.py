@@ -109,9 +109,7 @@ class HexBuilder:
                 )
         # Paint the edges as needed
         number_of_steps = len(GridGenerator.directions)
-        steps = [
-            self.steps[GridGenerator.directions[x]] for x in range(number_of_steps)
-        ]
+        steps = [self.steps[GridGenerator.directions[x]] for x in range(number_of_steps)]
         positions = [(int(x[0]), int(x[1])) for x in self.grid_positions]
         for j, gp in enumerate(self.grid_positions):
             paint_edge = [True, True, True, True, True, True]
@@ -171,14 +169,10 @@ class HexBuilder:
         pen.setWidth(int(line_width))
         pen.setColor(line_color)
         qpainter.setPen(pen)
-        hex_points = list(
-            HexBuilder.generate_hexagon_points(self.edge_length, position)
-        )
+        hex_points = list(HexBuilder.generate_hexagon_points(self.edge_length, position))
         x_correction = self.edge_length / 2
         y_correction = self.edge_length / (2 * math.tan(math.radians(30)))
-        hex_points = [
-            (int(x - x_correction), int(y - y_correction)) for x, y in hex_points
-        ]
+        hex_points = [(int(x - x_correction), int(y - y_correction)) for x, y in hex_points]
         hex_lines = []
 
         def line_test(in_line):
@@ -271,14 +265,10 @@ class HexBuilder:
         pen.setWidth(int(line_width))
         pen.setColor(line_color)
         qpainter.setPen(pen)
-        hex_points = list(
-            HexBuilder.generate_hexagon_points(self.edge_length, position)
-        )
+        hex_points = list(HexBuilder.generate_hexagon_points(self.edge_length, position))
         x_correction = self.edge_length / 2
         y_correction = self.edge_length / (2 * math.tan(math.radians(30)))
-        hex_points = [
-            (int(x - x_correction), int(y - y_correction)) for x, y in hex_points
-        ]
+        hex_points = [(int(x - x_correction), int(y - y_correction)) for x, y in hex_points]
         hex_lines = []
 
         for i in range(len(hex_points)):
@@ -324,14 +314,10 @@ class HexBuilder:
         brush.setColor(fill_color)
         qpainter.setBrush(brush)
         qpainter.setPen(pen)
-        hex_points = list(
-            HexBuilder.generate_hexagon_points(self.edge_length, position)
-        )
+        hex_points = list(HexBuilder.generate_hexagon_points(self.edge_length, position))
         x_correction = self.edge_length / 2
         y_correction = self.edge_length / (2 * math.tan(math.radians(30)))
-        hex_points = [
-            (int(x - x_correction), int(y - y_correction)) for x, y in hex_points
-        ]
+        hex_points = [(int(x - x_correction), int(y - y_correction)) for x, y in hex_points]
         hex_qpoints = [functions.create_point(*x) for x in hex_points]
         qpainter.drawPolygon(*hex_qpoints)
 
@@ -359,20 +345,14 @@ class HexBuilder:
         brush.setColor(fill_color)
         qpainter.setBrush(brush)
         qpainter.setPen(pen)
-        hex_points = list(
-            HexBuilder.generate_hexagon_points(self.edge_length, position)
-        )
+        hex_points = list(HexBuilder.generate_hexagon_points(self.edge_length, position))
         x_correction = self.edge_length / 2
         y_correction = self.edge_length / (2 * math.tan(math.radians(30)))
-        hex_points = [
-            (int(x - x_correction), int(y - y_correction)) for x, y in hex_points
-        ]
+        hex_points = [(int(x - x_correction), int(y - y_correction)) for x, y in hex_points]
         hex_qpoints = [functions.create_point(*x) for x in hex_points]
         qpainter.drawPolygon(*hex_qpoints)
 
-    def draw_full_hexagon_with_shadow(
-        self, position, fill_color, line_width, line_color
-    ):
+    def draw_full_hexagon_with_shadow(self, position, fill_color, line_width, line_color):
         qpainter = self.painter
 
         self.draw_filled_hexagon(position, fill_color)

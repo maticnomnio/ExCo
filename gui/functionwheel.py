@@ -770,8 +770,7 @@ class FunctionWheel(qt.QFrame):
                 "Show CWD\nFile/Directory\nTree",
                 input_focus_last_widget=constants.HexButtonFocus.NONE,
                 input_tool_tip=(
-                    "Create a file/directory tree for the "
-                    + "current working directory (CWD)"
+                    "Create a file/directory tree for the " + "current working directory (CWD)"
                 ),
                 input_no_document_focus_disable=False,
             ),
@@ -925,18 +924,12 @@ class FunctionWheel(qt.QFrame):
             elif isinstance(button.pixmap, str):
                 init_button.setIcon(functions.create_icon(button.pixmap))
             else:
-                raise Exception(
-                    "[FunctionWheel] Unknown pixmap type: {}".format(button.pixmap)
-                )
-            init_button.setIconSize(
-                qt.QSize(int(button.geometry[2]), int(button.geometry[3]))
-            )
+                raise Exception("[FunctionWheel] Unknown pixmap type: {}".format(button.pixmap))
+            init_button.setIconSize(qt.QSize(int(button.geometry[2]), int(button.geometry[3])))
             init_button.setToolTip(button.tool_tip)
             init_button.setStatusTip(button.tool_tip)
             init_button.set_click_function(create_click_func(button.function))
-            init_button.set_enter_function(
-                create_enter_func(button.function_text, button.font)
-            )
+            init_button.set_enter_function(create_enter_func(button.function_text, button.font))
             init_button.set_leave_function(create_leave_func(button.font))
             # Set the button size and location
             init_button.setGeometry(
@@ -1127,9 +1120,7 @@ class ButtonInfo:
         input_pixmap,
         input_function,
         input_function_text,
-        input_font=qt.QFont(
-            settings.get("current_font_name"), 14, weight=qt.QFont.Weight.Bold
-        ),
+        input_font=qt.QFont(settings.get("current_font_name"), 14, weight=qt.QFont.Weight.Bold),
         input_focus_last_widget=constants.HexButtonFocus.NONE,
         input_no_tab_focus_disable=False,
         input_no_document_focus_disable=True,

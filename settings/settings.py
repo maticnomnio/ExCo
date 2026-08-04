@@ -26,13 +26,6 @@ import functions
 import settings.constants
 import settings.functions
 
-try:
-    import settings.old.settings as oldsettings
-
-    OLD_SETTINGS_IMPORTED = True
-except:
-    OLD_SETTINGS_IMPORTED = False
-
 
 class SettingsManipulator:
     """
@@ -45,16 +38,12 @@ class SettingsManipulator:
         if self.__error_lock:
             raise Exception("[Settings] An error occurred during loading of settings!")
 
-        return self.__error_lock
-
     def __init__(self):
         # Set the current active settings file path
         self.active_settings_file = functions.unixify_join(
             data.settings_directory, settings.constants.settings_filename["mark-3"]
         )
-        active_settings_file_exists = self.check_settings_file(
-            self.active_settings_file
-        )
+        active_settings_file_exists = self.check_settings_file(self.active_settings_file)
 
         # Create storage
         self.storage = SettingsStorage(
@@ -80,7 +69,7 @@ class SettingsManipulator:
             elif os.path.isfile(old_files["mark-1"]):
                 # Convert MK-I setting file to to MK-II
                 self.__load_mk1(old_files["mark-2"])
-            elif OLD_SETTINGS_IMPORTED == True and os.path.isfile(old_files["mark-0"]):
+            elif os.path.isfile(old_files["mark-0"]):
                 # Convert MK-0 setting file to to MK-1
                 self.__load_mk0(old_files["mark-0"])
             else:
@@ -90,6 +79,14 @@ class SettingsManipulator:
         self.load_settings()
 
     def __load_mk0(self, old_file_path: str) -> None:
+        try:
+            import settings.old.settings as oldsettings
+        except Exception:
+            oldsettings = None
+        if oldsettings is None:
+            self.set("theme-name", "Air")
+            self.sessions.set_sessions(self.sessions.get_sessions())
+            return
         old_data = oldsettings.parse_settings_file(old_file_path)
         for k, v in old_data["sessions"].items():
             v["Name"] = k
@@ -117,15 +114,15 @@ class SettingsManipulator:
                     }
                     layout = json.loads(settings.constants.default_layout)
                     windows = {
-                        "main-window-files": layout["BOXES"]["0"]["BOX-H"]["0"][
-                            "BOX-V"
+                        "main-window-files": layout["BOXES"]["0"]["BOX-H"]["0"]["BOX-V"]["0"][
+                            "TABS"
+                        ],
+                        "upper-window-files": layout["BOXES"]["0"]["BOX-H"]["1"]["BOX-V"]["0"][
+                            "BOX-H"
                         ]["0"]["TABS"],
-                        "upper-window-files": layout["BOXES"]["0"]["BOX-H"]["1"][
-                            "BOX-V"
-                        ]["0"]["BOX-H"]["0"]["TABS"],
-                        "lower-window-files": layout["BOXES"]["0"]["BOX-H"]["1"][
-                            "BOX-V"
-                        ]["1"]["BOX-H"]["0"]["TABS"],
+                        "lower-window-files": layout["BOXES"]["0"]["BOX-H"]["1"]["BOX-V"]["1"][
+                            "BOX-H"
+                        ]["0"]["TABS"],
                     }
                     for kk, vv in windows.items():
                         files = v[kk]["files"]
@@ -153,7 +150,7 @@ class SettingsManipulator:
 
         sessions = settings_data["stored_sessions"]
         recurse_groups(sessions["main"])
-        self.set("settings_filename_with_path", active_settings_file)
+        self.set("settings_filename_with_path", self.active_settings_file)
         self.sessions.set_sessions(sessions)
 
     def __load_mk2(self, old_file_path: str) -> None:
@@ -188,11 +185,7 @@ class SettingsManipulator:
         if self.__error_check():
             return
 
-        settings_data = functions.load_json_file(
-            self.get("settings_filename_with_path")
-        )
-        # Clear the recent file list
-        self.get("recent_files", [])
+        settings_data = functions.load_json_file(self.get("settings_filename_with_path"))
         # Load the session data from the file to have it up-to-date
         stored_sessions = settings_data["stored_sessions"]
         self.sessions.set_sessions(stored_sessions)
@@ -203,9 +196,7 @@ class SettingsManipulator:
         """
         try:
             # Load data from file
-            settings_data = functions.load_json_file(
-                self.get("settings_filename_with_path")
-            )
+            settings_data = functions.load_json_file(self.get("settings_filename_with_path"))
 
             # Update storage
             self.storage.update_without_saving(settings_data)
@@ -235,9 +226,9 @@ class SettingsManipulator:
         # Replace back-slashes to forward-slashes on Windows
         if data.platform == "Windows":
             new_file = new_file.replace("\\", "/")
-        
+
         current_list = self.get("recent_files").copy()
-        
+
         # Check recent files list length
         while len(current_list) > self.get("max-number-of-recent-files"):
             # The recent files list is to long
@@ -245,9 +236,7 @@ class SettingsManipulator:
         # Check if he new file is already in the list
         if new_file in self.get("recent_files"):
             # Check if the file is already at the top
-            if current_list.index(new_file) == (
-                self.get("max-number-of-recent-files") - 1
-            ):
+            if current_list.index(new_file) == (self.get("max-number-of-recent-files") - 1):
                 return
             # Remove the old file with the same name as the new file from the list
             try:
@@ -261,16 +250,14 @@ class SettingsManipulator:
         else:
             # The new file is not in the list, append it to the end of the list
             current_list.append(new_file)
-        
+
         self.set("recent_files", current_list)
 
     def save_last_layout(self, layout):
         if self.__error_check():
             return
 
-        filepath = os.path.join(
-            data.settings_directory, self.get("last-layout-filename")
-        )
+        filepath = os.path.join(data.settings_directory, self.get("last-layout-filename"))
         with open(filepath, "w+", encoding="utf-8") as f:
             f.write(json.dumps(layout, indent=2, ensure_ascii=False))
 
@@ -352,9 +339,6 @@ class Sessions:
         """
         Add a new session to the stored session list
         """
-        # Update sessions
-        self.__parent.load_settings()
-
         # Create the new session object
         new_session = self.create_empty_session(
             name=session_name,
@@ -373,9 +357,6 @@ class Sessions:
         """
         Add a new group to the stored session list
         """
-        # Update sessions
-        self.__parent.load_settings()
-
         # Create the new group object
         new_group = self.create_empty_session_group(
             name=group_name, chain=group_chain, groups={}, sessions={}
@@ -392,9 +373,6 @@ class Sessions:
         """
         Remove a session from the stored session list
         """
-        # Update sessions
-        self.__parent.load_settings()
-
         group = self.__sessions["main"]
         for c in session_to_remove["chain"]:
             group = group["groups"][c]
@@ -411,9 +389,6 @@ class Sessions:
         """
         Remove an entire group from the stored session list
         """
-        # Update sessions
-        self.__parent.load_settings()
-
         group = self.__sessions["main"]
         if len(remove_group["chain"]) > 0:
             for c in remove_group["chain"]:
@@ -431,9 +406,6 @@ class Sessions:
         """
         Sort the stored sessions alphabetically by name
         """
-        # Update sessions
-        self.__parent.load_settings()
-
         # Create a new empty dict
         sorted_sessions = {}
         # Add sorted keys
@@ -529,9 +501,7 @@ class SettingsStorage(UserDict):
     def __backup_file(self) -> None:
         # Create a copy of the settings file
         settings_file = self.file_path
-        settings_copy = (
-            f"{settings_file}.{functions.get_default_datetime_formatted_string()}.bak"
-        )
+        settings_copy = f"{settings_file}.{functions.get_default_datetime_formatted_string()}.bak"
         shutil.copy(settings_file, settings_copy)
 
     def __load(self) -> None:
@@ -540,10 +510,7 @@ class SettingsStorage(UserDict):
         it uses the default settings and saves them to the file immediately.
         """
         if not os.path.exists(self.file_path):
-            self.echo(
-                f"Settings file not found at '{self.file_path}'.\n"
-                "Using default settings.\n"
-            )
+            self.echo(f"Settings file not found at '{self.file_path}'.\nUsing default settings.\n")
             # Use the intelligent update to set defaults, enabling recursive merging
             # if default_settings contains nested dicts
             self.data.clear()  # Ensure data is empty before applying defaults
@@ -568,9 +535,7 @@ class SettingsStorage(UserDict):
                 self.data.clear()  # Clear existing data to ensure defaults are the base
                 self.update(self.__default_settings, _initial_load=True)
                 self.update(loaded_data, _initial_load=True)  # Merge loaded data
-                if (
-                    self.data != loaded_data
-                ):  # If merging changed something from purely loaded
+                if self.data != loaded_data:  # If merging changed something from purely loaded
                     self.__save()  # Save if the merge process modified something
         except json.JSONDecodeError:
             self.echo(
@@ -618,59 +583,38 @@ class SettingsStorage(UserDict):
         and stores a deep copy to prevent external mutations.
         """
         changed = False
-    
+
         # Check if both existing and new values are mutable types that need deep comparison
         if key in self.data:
             existing = self.data[key]
-            
-            # Handle dictionaries
-            if isinstance(existing, dict) and isinstance(value, dict):
-                if not self._dicts_equal(existing, value):
-                    self.echo(f"Setting '{key}' (dict) updated.")
-                    super().__setitem__(key, copy.deepcopy(value))
-                    changed = True
-                else:
-                    return  # No change
-            
-            # Handle lists
-            elif isinstance(existing, list) and isinstance(value, list):
-                if not self._lists_equal(existing, value):
-                    self.echo(f"Setting '{key}' (list) updated.")
-                    super().__setitem__(key, copy.deepcopy(value))
-                    changed = True
-                else:
-                    return  # No change
-            
+
+            # Handle dict, list, tuple: deep recursive comparison
+            if isinstance(existing, (dict, list, tuple)) and isinstance(value, (dict, list, tuple)):
+                if type(existing) is type(value) and self._deep_equal(existing, value):
+                    return
+                self.echo(f"Setting '{key}' ({type(value).__name__}) updated.")
+                super().__setitem__(key, copy.deepcopy(value))
+                changed = True
+
             # Handle sets
             elif isinstance(existing, set) and isinstance(value, set):
-                if existing != value:
-                    self.echo(f"Setting '{key}' (set) updated.")
-                    super().__setitem__(key, copy.deepcopy(value))
-                    changed = True
-                else:
-                    return  # No change
-            
-            # Handle tuples (immutable but can contain mutable objects)
-            elif isinstance(existing, tuple) and isinstance(value, tuple):
-                if not self._tuples_equal(existing, value):
-                    self.echo(f"Setting '{key}' (tuple) updated.")
-                    super().__setitem__(key, copy.deepcopy(value))
-                    changed = True
-                else:
-                    return  # No change
-            
+                if existing == value:
+                    return
+                self.echo(f"Setting '{key}' (set) updated.")
+                super().__setitem__(key, copy.deepcopy(value))
+                changed = True
+
             # Handle all other types (including immutable types)
             else:
                 if existing == value:
-                    return  # No change
+                    return
+                self.echo(f"Setting '{key}' changed.")
+                # Deep copy mutable types, direct assignment for immutable
+                if isinstance(value, (dict, list, set)):
+                    super().__setitem__(key, copy.deepcopy(value))
                 else:
-                    self.echo(f"Setting '{key}' changed.")
-                    # Deep copy mutable types, direct assignment for immutable
-                    if isinstance(value, (dict, list, set)):
-                        super().__setitem__(key, copy.deepcopy(value))
-                    else:
-                        super().__setitem__(key, value)
-                    changed = True
+                    super().__setitem__(key, value)
+                changed = True
         else:
             # New key
             self.echo(f"Setting '{key}' added.")
@@ -680,75 +624,23 @@ class SettingsStorage(UserDict):
             else:
                 super().__setitem__(key, value)
             changed = True
-    
+
         if changed:
             self.__save()
-    
-    def _dicts_equal(self, d1: dict, d2: dict) -> bool:
-        """Fast recursive dictionary comparison."""
-        if len(d1) != len(d2):
+
+    def _deep_equal(self, a: Any, b: Any) -> bool:
+        """Recursive deep equality for nested dict/list/tuple structures."""
+        if type(a) is not type(b):
             return False
-        
-        for k, v1 in d1.items():
-            if k not in d2:
+        if isinstance(a, dict):
+            if len(a) != len(b):
                 return False
-            
-            v2 = d2[k]
-            if isinstance(v1, dict) and isinstance(v2, dict):
-                if not self._dicts_equal(v1, v2):
-                    return False
-            elif isinstance(v1, list) and isinstance(v2, list):
-                if not self._lists_equal(v1, v2):
-                    return False
-            elif isinstance(v1, tuple) and isinstance(v2, tuple):
-                if not self._tuples_equal(v1, v2):
-                    return False
-            elif v1 != v2:
+            return all(k in b and self._deep_equal(v, b[k]) for k, v in a.items())
+        if isinstance(a, (list, tuple)):
+            if len(a) != len(b):
                 return False
-        
-        return True
-    
-    def _lists_equal(self, l1: list, l2: list) -> bool:
-        """Fast recursive list comparison."""
-        if len(l1) != len(l2):
-            return False
-        
-        for i, v1 in enumerate(l1):
-            v2 = l2[i]
-            if isinstance(v1, dict) and isinstance(v2, dict):
-                if not self._dicts_equal(v1, v2):
-                    return False
-            elif isinstance(v1, list) and isinstance(v2, list):
-                if not self._lists_equal(v1, v2):
-                    return False
-            elif isinstance(v1, tuple) and isinstance(v2, tuple):
-                if not self._tuples_equal(v1, v2):
-                    return False
-            elif v1 != v2:
-                return False
-        
-        return True
-    
-    def _tuples_equal(self, t1: tuple, t2: tuple) -> bool:
-        """Fast recursive tuple comparison."""
-        if len(t1) != len(t2):
-            return False
-        
-        for i, v1 in enumerate(t1):
-            v2 = t2[i]
-            if isinstance(v1, dict) and isinstance(v2, dict):
-                if not self._dicts_equal(v1, v2):
-                    return False
-            elif isinstance(v1, list) and isinstance(v2, list):
-                if not self._lists_equal(v1, v2):
-                    return False
-            elif isinstance(v1, tuple) and isinstance(v2, tuple):
-                if not self._tuples_equal(v1, v2):
-                    return False
-            elif v1 != v2:
-                return False
-        
-        return True
+            return all(self._deep_equal(v1, v2) for v1, v2 in zip(a, b))
+        return a == b
 
     def __delitem__(self, key: str) -> None:
         """
@@ -760,9 +652,7 @@ class SettingsStorage(UserDict):
             super().__delitem__(key)
             self.__save()
         else:
-            self.echo(
-                f"Attempted to delete non-existent setting '{key}'. No action, no save."
-            )
+            self.echo(f"Attempted to delete non-existent setting '{key}'. No action, no save.")
             raise KeyError(f"'{key}' not found in settings.")
 
     def update(self, other=None, _initial_load=False, **kwargs) -> None:
@@ -770,79 +660,38 @@ class SettingsStorage(UserDict):
         Overrides the update method to save settings only if the data truly changes.
         If a value is a dictionary and the existing item is also a dictionary,
         it performs a recursive update.
-
-        The final JSON snapshot check ensures all changes, including those from
-        recursive dictionary updates, are accurately detected before saving.
         """
+        _changed = False
 
-        # 1. Capture the initial state for the final deep comparison (to catch ALL changes)
-        initial_data_snapshot = json.dumps(self.data, sort_keys=True)
-
-        # --- Helper function for setting key/value and tracking changes ---
-        # NOTE: This helper is only for non-recursive assignments. It relies on
-        # the final JSON snapshot check for recursive changes.
         def _set_item_and_check_change(key, value):
-            # Check if the key exists AND the value is different
+            nonlocal _changed
             if key in self.data and self.data[key] == value:
-                return  # Value is the same, do nothing
-
-            # Value is new or different, set it.
-            # We explicitly pass the class name 'SettingsStorage' to super()
-            # to resolve the nested function scope issue.
+                return
             super(SettingsStorage, self).__setitem__(key, value)
+            _changed = True
 
-            # Since the value changed, we don't need a separate _changed flag
-            # here anymore, as the final JSON snapshot will capture this change too.
-            # The JSON comparison is the single source of truth for change detection.
-
-        # Process 'other' if it's a dict or iterable of key-value pairs
         if other:
-            if hasattr(other, "keys"):  # It's a dict-like object
-                for key, value in other.items():
-                    if (
-                        key in self.data
-                        and isinstance(self.data[key], dict)
-                        and isinstance(value, dict)
-                    ):
-                        # Recursive update for nested dictionaries.
-                        # This update modifies self.data[key] in-place.
-                        self.data[key].update(value)
-                        # NO _changed = True HERE! Rely on JSON comparison.
-                    else:
-                        _set_item_and_check_change(key, value)
-            else:  # Assume iterable of (key, value) pairs
-                for key, value in other:
-                    if (
-                        key in self.data
-                        and isinstance(self.data[key], dict)
-                        and isinstance(value, dict)
-                    ):
-                        self.data[key].update(value)
-                        # NO _changed = True HERE! Rely on JSON comparison.
-                    else:
-                        _set_item_and_check_change(key, value)
+            other_items = other.items() if hasattr(other, "keys") else other
+            for key, value in other_items:
+                if (
+                    key in self.data
+                    and isinstance(self.data[key], dict)
+                    and isinstance(value, dict)
+                ):
+                    self.data[key].update(value)
+                    _changed = True
+                else:
+                    _set_item_and_check_change(key, value)
 
-        # Process kwargs
         for key, value in kwargs.items():
-            if (
-                key in self.data
-                and isinstance(self.data[key], dict)
-                and isinstance(value, dict)
-            ):
-                # Recursive update for nested dictionaries
+            if key in self.data and isinstance(self.data[key], dict) and isinstance(value, dict):
                 self.data[key].update(value)
-                # NO _changed = True HERE! Rely on JSON comparison.
+                _changed = True
             else:
                 _set_item_and_check_change(key, value)
 
-        # 2. Capture the final state for the final deep comparison
-        final_data_snapshot = json.dumps(self.data, sort_keys=True)
-
-        # 3. Final Check and Save
-        # The JSON comparison is now the ONLY check for any change (simple or deep).
-        if final_data_snapshot != initial_data_snapshot:
-            if not _initial_load:  # Only save if not called from __load
-                self.__save()
+        if _changed and not _initial_load:
+            self.__save()
 
     def update_without_saving(self, other=None, **kwargs) -> None:
         """
@@ -874,9 +723,7 @@ class SettingsStorage(UserDict):
         """
         if key not in self:
             self.echo(f"Setting default '{key}' applied.")
-            self[key] = (
-                value  # Use self[key] to trigger __setitem__ (which handles recursion)
-            )
+            self[key] = value  # Use self[key] to trigger __setitem__ (which handles recursion)
         elif isinstance(self.data.get(key), dict) and isinstance(value, dict):
             # If default is a dict and existing is a dict, attempt to merge
             initial_snapshot = json.dumps(self.data[key], sort_keys=True)

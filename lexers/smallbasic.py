@@ -18,9 +18,10 @@ import qt
 
 import functions
 import lexers
+from lexers.baselexer import BaseLexer
 
 
-class SmallBasic(qt.QsciLexerCustom):
+class SmallBasic(BaseLexer):
     """
     Custom lexer for the SmallBasic programming languages
     """
@@ -425,12 +426,8 @@ class SmallBasic(qt.QsciLexerCustom):
         # Initialize superclass
         super().__init__()
         # Set the default style values
-        self.setDefaultColor(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["color"])
-        )
-        self.setDefaultPaper(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["background"])
-        )
+        self.setDefaultColor(qt.QColor(settings.get_theme()["fonts"]["default"]["color"]))
+        self.setDefaultPaper(qt.QColor(settings.get_theme()["fonts"]["default"]["background"]))
         self.setDefaultFont(settings.get_editor_font())
         # Reset autoindentation style
         self.setAutoIndentStyle(0)
@@ -452,11 +449,6 @@ class SmallBasic(qt.QsciLexerCustom):
 
     def braceStyle(self) -> int:
         return self.styles["Default"]
-
-    def defaultFont(self, style: int | None = None) -> qt.QFont:
-        return qt.QFont(
-            settings.get("current_font_name"), settings.get("current_font_size")
-        )
 
     def set_theme(self, theme: dict[str, Any]) -> None:
         for style in self.styles:
@@ -488,10 +480,7 @@ class SmallBasic(qt.QsciLexerCustom):
         # Initialize various states and split the text into tokens
         stringing = False
         commenting = False
-        tokens = [
-            (token, len(bytearray(token, "utf-8")))
-            for token in self.splitter.findall(text)
-        ]
+        tokens = [(token, len(bytearray(token, "utf-8"))) for token in self.splitter.findall(text)]
         # Style the tokens accordingly
         for i, token in enumerate(tokens):
             if commenting == True:
@@ -516,9 +505,7 @@ class SmallBasic(qt.QsciLexerCustom):
             elif token[0] in operator_list:
                 setStyling(token[1], self.styles["Operator"])
             elif token[0] in keyword_dictionary["ConsoleFunctions"]:
-                setStyling(
-                    token[1], self.styles[self.keyword_remap["ConsoleFunctions"]]
-                )
+                setStyling(token[1], self.styles[self.keyword_remap["ConsoleFunctions"]])
             elif token[0] in keyword_dictionary["DataFunctions"]:
                 setStyling(token[1], self.styles[self.keyword_remap["DataFunctions"]])
             elif token[0] in keyword_dictionary["DateFunctions"]:
@@ -526,13 +513,9 @@ class SmallBasic(qt.QsciLexerCustom):
             elif token[0] in keyword_dictionary["FileFunctions"]:
                 setStyling(token[1], self.styles[self.keyword_remap["FileFunctions"]])
             elif token[0] in keyword_dictionary["GraphicsFunctions"]:
-                setStyling(
-                    token[1], self.styles[self.keyword_remap["GraphicsFunctions"]]
-                )
+                setStyling(token[1], self.styles[self.keyword_remap["GraphicsFunctions"]])
             elif token[0] in keyword_dictionary["LanguageFunctions"]:
-                setStyling(
-                    token[1], self.styles[self.keyword_remap["LanguageFunctions"]]
-                )
+                setStyling(token[1], self.styles[self.keyword_remap["LanguageFunctions"]])
             elif token[0] in keyword_dictionary["MathFunctions"]:
                 setStyling(token[1], self.styles[self.keyword_remap["MathFunctions"]])
             elif token[0] in keyword_dictionary["StringFunctions"]:

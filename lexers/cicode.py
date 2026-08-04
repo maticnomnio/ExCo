@@ -19,9 +19,10 @@ import data
 import settings
 import time
 import lexers
+from lexers.baselexer import BaseLexer
 
 
-class CiCode(qt.QsciLexerCustom):
+class CiCode(BaseLexer):
     """
     Custom lexer for the Citect CiCode programming language
     """
@@ -1194,12 +1195,8 @@ class CiCode(qt.QsciLexerCustom):
         # Initialize superclass
         super().__init__()
         # Set the default style values
-        self.setDefaultColor(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["color"])
-        )
-        self.setDefaultPaper(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["background"])
-        )
+        self.setDefaultColor(qt.QColor(settings.get_theme()["fonts"]["default"]["color"]))
+        self.setDefaultPaper(qt.QColor(settings.get_theme()["fonts"]["default"]["background"]))
         self.setDefaultFont(settings.get_editor_font())
         # Reset autoindentation style
         self.setAutoIndentStyle(0)
@@ -1221,11 +1218,6 @@ class CiCode(qt.QsciLexerCustom):
 
     def braceStyle(self):
         return self.styles["Default"]
-
-    def defaultFont(self, style):
-        return qt.QFont(
-            settings.get("current_font_name"), settings.get("current_font_size")
-        )
 
     def set_theme(self, theme):
         for style in self.styles:
@@ -1265,8 +1257,7 @@ class CiCode(qt.QsciLexerCustom):
         multiline_commenting = False
         sequence = None
         tokens = [
-            (token.lower(), len(bytearray(token, "utf-8")))
-            for token in self.splitter.findall(text)
+            (token.lower(), len(bytearray(token, "utf-8"))) for token in self.splitter.findall(text)
         ]
 
         # Check if there is a style(comment, string, ...) stretching on from the previous line

@@ -1,0 +1,176 @@
+# STARO
+def get_items(item, level=0):
+    echo(level * "  " + str(item.__name__) + ": {")
+    
+    for i in dir(item):
+        if not i.startswith("__"):
+            value = getattr(item, i)
+            if isinstance(value, str):
+                echo((level+1) * "  ", repr(i), ':', repr(value) + ',')
+            elif isinstance(value, int):
+                echo((level+1) * "  ", repr(i), ':', repr(hex(value).replace("0x",'#')) + ',')
+            elif isinstance(value, data.QColor):
+                echo((level+1) * "  ", repr(i), ':', repr(value.name(data.QColor.HexArgb)) + ',')
+            elif isinstance(value, tuple):
+                echo((level+1) * "  ", repr(i), ':', repr(value) + ',')
+            elif isinstance(value, type):
+                get_items(value, level+1)
+            else:
+                #echo(level * "  ", "UNKNOWN", "(" + i + ": " + value.__class__.__name__ + ")")
+                pass
+    
+    echo(level * "  " + '}')
+
+get_items(themes.Air)
+
+
+# NOVO
+import json
+import pprint
+
+def get_items(item, level=0):
+    items = {}
+    
+    for i in dir(item):
+        if not i.startswith("__"):
+            value = getattr(item, i)
+            if isinstance(value, str):
+                items[i] = value
+            elif isinstance(value, int):
+                items[i] = hex(value).replace("0x",'#')
+            elif isinstance(value, data.QColor):
+                items[i] = value.name(data.QColor.HexArgb)
+            elif isinstance(value, tuple):
+                items[i] = value
+            elif isinstance(value, type):
+                items[i] = get_items(value, level+1)
+            else:
+                #echo(level * "  ", "UNKNOWN", "(" + i + ": " + value.__class__.__name__ + ")")
+                pass
+    
+    return items
+
+tree = get_items(themes.Air)
+
+font_keys = {}
+for k,v in tree["Font"].items():
+    if not isinstance(v, dict):
+        continue
+    for kk,vv in v.items():
+        if k.lower() == "repl":
+            font_keys[kk] = hex(vv[1])
+        else:
+            font_keys[kk] = hex(vv[1])
+
+tree["Font"] = font_keys
+
+json_tree = json.dumps(tree, indent=2, ensure_ascii=False)
+echo(json_tree)
+
+
+# NOVO 2
+import json
+import collections
+import pprint
+
+def get_items(item, level=0):
+    items = {}
+    
+    for i in dir(item):
+        if not i.startswith("__"):
+            value = getattr(item, i)
+            if isinstance(value, str):
+                items[i] = value
+            elif isinstance(value, int):
+                items[i] = "#{:06x}".format(value)
+            elif isinstance(value, data.QColor):
+                items[i] = value.name(data.QColor.HexArgb)
+            elif isinstance(value, tuple):
+                items[i] = value
+            elif isinstance(value, type):
+                items[i] = get_items(value, level+1)
+            else:
+                #echo(level * "  ", "UNKNOWN", "(" + i + ": " + value.__class__.__name__ + ")")
+                pass
+    
+    return items
+
+theme = themes.Water
+tree = get_items(theme)
+#for i in dir(theme.Font.Python):
+#    if not i.startswith("__"):
+#        value = getattr(theme.Font.Python, i)
+#        tree["Font"][i] = value
+
+font_keys = collections.OrderedDict()
+for k,v in tree["Font"].items():
+    if not isinstance(v, dict):
+        continue
+    for kk,vv in v.items():
+        if kk not in font_keys.keys():
+            font_keys[kk.lower()] = {
+                "color": None,
+                "bold": False,
+                "background": None,
+            }
+        if k.lower() == "repl":
+            font_keys[kk.lower()]["color"] = vv
+        else:
+            font_keys[kk.lower()]["color"] = hex(vv[1]).replace("0x", '#')
+
+for kk,vv in tree["Font"]["Python"].items():
+    if kk not in font_keys.keys():
+        font_keys[kk.lower()] = {
+            "color": None,
+            "bold": False,
+            "background": None,
+        }
+    if k.lower() == "repl":
+        font_keys[kk.lower()]["color"] = vv
+    else:
+        font_keys[kk.lower()]["color"] = hex(vv[1]).replace("0x", '#')
+
+for k,v in tree["Paper"].items():
+    if not isinstance(v, dict):
+        continue
+    for kk,vv in v.items():
+        font_keys[kk.lower()]["background"] = vv
+
+tree["fonts"] = font_keys
+tree.pop("Font")
+tree.pop("Paper")
+
+# lower all keys
+def lower_keys(d):
+    for k in list(d.keys()):
+        v = d.pop(k)
+        if isinstance(v, dict):
+            lower_keys(v)
+        d[k.lower().replace('_', '-')] = v
+lower_keys(tree)
+
+filtered_font_keys = {}
+for k in sorted(font_keys.keys()):
+    filtered_font_keys[k] = font_keys[k]
+tree["fonts"] = filtered_font_keys
+filtered_tree = {}
+for k in sorted(tree.keys()):
+    filtered_tree[k] = tree[k]
+tree = filtered_tree
+
+json_tree = json.dumps(tree, indent=2, ensure_ascii=False)
+echo(json_tree)
+
+
+
+
+## Conversion of old theme calls to new
+    sl = cmain.selectedText().split('.')
+    st = sl[:2]
+    for i in sl[2:]:
+        i = i.replace("_","-").lower()
+        i = '["{}"]'.format(i)
+        st.append(i)
+    item = ".".join(st[:2]) + "".join(st[2:])
+    echo(item)
+    cmain.replaceSelectedText(item)

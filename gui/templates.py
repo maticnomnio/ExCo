@@ -123,9 +123,7 @@ def create_frame(
     margins=(0, 0, 0, 0),
 ):
     frame = qt.QFrame(parent)
-    layout = create_layout(
-        layout=layout, spacing=spacing, margins=margins, parent=frame
-    )
+    layout = create_layout(layout=layout, spacing=spacing, margins=margins, parent=frame)
     frame.setLayout(layout)
     return frame
 
@@ -134,11 +132,7 @@ def create_scroll_area():
     scroll_area = qt.QScrollArea()
     scroll_area.setWidgetResizable(True)
     scroll_area.setHorizontalScrollBarPolicy(qt.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-    scroll_area.verticalScrollBar().setContextMenuPolicy(
-        qt.Qt.ContextMenuPolicy.NoContextMenu
-    )
-    scroll_area.horizontalScrollBar().setContextMenuPolicy(
-        qt.Qt.ContextMenuPolicy.NoContextMenu
-    )
+    scroll_area.verticalScrollBar().setContextMenuPolicy(qt.Qt.ContextMenuPolicy.NoContextMenu)
+    scroll_area.horizontalScrollBar().setContextMenuPolicy(qt.Qt.ContextMenuPolicy.NoContextMenu)
     scroll_area.setFrameShape(qt.QFrame.Shape.NoFrame)
     return scroll_area

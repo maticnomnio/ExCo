@@ -20,10 +20,11 @@ import settings
 from pprint import pprint
 
 import lexers
+from lexers.baselexer import BaseLexer
 from lexers.functions import set_font
 
 
-class Nim(qt.QsciLexerCustom):
+class Nim(BaseLexer):
     """
     Custom lexer for the Nim programming language
     """
@@ -351,12 +352,8 @@ class Nim(qt.QsciLexerCustom):
         # Initialize superclass
         super().__init__()
         # Set the default style values
-        self.setDefaultColor(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["color"])
-        )
-        self.setDefaultPaper(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["background"])
-        )
+        self.setDefaultColor(qt.QColor(settings.get_theme()["fonts"]["default"]["color"]))
+        self.setDefaultPaper(qt.QColor(settings.get_theme()["fonts"]["default"]["background"]))
         self.setDefaultFont(settings.get_editor_font())
         # Reset autoindentation style
         self.setAutoIndentStyle(0)
@@ -378,11 +375,6 @@ class Nim(qt.QsciLexerCustom):
 
     def braceStyle(self) -> int:
         return self.styles["Default"]
-
-    def defaultFont(self, style: int | None = None) -> qt.QFont:
-        return qt.QFont(
-            settings.get("current_font_name"), settings.get("current_font_size")
-        )
 
     def set_theme(self, theme: dict[str, Any]) -> None:
         for style in self.styles:
@@ -452,10 +444,7 @@ class Nim(qt.QsciLexerCustom):
         pragmaing = False
         case_of = False
         cls_descrition = False
-        tokens = [
-            (token, len(bytearray(token, "utf-8")))
-            for token in self.splitter.findall(text)
-        ]
+        tokens = [(token, len(bytearray(token, "utf-8"))) for token in self.splitter.findall(text)]
         # Check if there is a style(comment, string, ...) stretching on from the previous line
         if start != 0:
             previous_style = editor.SendScintilla(editor.SCI_GETSTYLEAT, start - 1)
@@ -492,11 +481,7 @@ class Nim(qt.QsciLexerCustom):
                 # Continuation of comment
                 setStyling(token[1], M_DOC)
                 # Check if comment ends
-                if (
-                    "#" in token[0]
-                    and "#" in tokens[i - 1][0]
-                    and "]" in tokens[i - 2][0]
-                ):
+                if "#" in token[0] and "#" in tokens[i - 1][0] and "]" in tokens[i - 2][0]:
                     multi_doc_commenting = False
             elif stringing == True:
                 # Continuation of a string
@@ -596,11 +581,7 @@ class Nim(qt.QsciLexerCustom):
                 setStyling(token[1], TYP)
             elif token[0] == "#":
                 # Start of a comment or documentation comment
-                if (
-                    len(tokens) > i + 2
-                    and tokens[i + 1][0] == "#"
-                    and tokens[i + 2][0] == "["
-                ):
+                if len(tokens) > i + 2 and tokens[i + 1][0] == "#" and tokens[i + 2][0] == "[":
                     setStyling(token[1], M_DOC)
                     multi_doc_commenting = True
                 elif len(tokens) > i + 1 and tokens[i + 1][0] == "#":
@@ -624,9 +605,7 @@ class Nim(qt.QsciLexerCustom):
                 # Number
                 # Check only the first character, because Nim has those weird constants e.g.: 12u8, ...)
                 setStyling(token[1], NUM)
-            elif (
-                (i > 1) and (tokens[i - 2][0] in user_kw_list) and token[0][0].isalpha()
-            ):
+            elif (i > 1) and (tokens[i - 2][0] in user_kw_list) and token[0][0].isalpha():
                 # Class-like definition
                 setStyling(token[1], CLS)
                 cls_descrition = True
@@ -702,10 +681,7 @@ class Nim(qt.QsciLexerCustom):
         pragmaing = False
         case_of = False
         cls_descrition = False
-        tokens = [
-            (token, len(bytearray(token, "utf-8")))
-            for token in self.splitter.findall(text)
-        ]
+        tokens = [(token, len(bytearray(token, "utf-8"))) for token in self.splitter.findall(text)]
         # Check if there is a style(comment, string, ...) stretching on from the previous line
         if start != 0:
             previous_style = editor.SendScintilla(editor.SCI_GETSTYLEAT, start - 1)
@@ -742,11 +718,7 @@ class Nim(qt.QsciLexerCustom):
                 # Continuation of comment
                 setStyling(token[1], M_DOC)
                 # Check if comment ends
-                if (
-                    "#" in token[0]
-                    and "#" in tokens[i - 1][0]
-                    and "]" in tokens[i - 2][0]
-                ):
+                if "#" in token[0] and "#" in tokens[i - 1][0] and "]" in tokens[i - 2][0]:
                     multi_doc_commenting = False
             elif stringing == True:
                 # Continuation of a string
@@ -846,11 +818,7 @@ class Nim(qt.QsciLexerCustom):
                 setStyling(token[1], TYP)
             elif token[0] == "#":
                 # Start of a comment or documentation comment
-                if (
-                    len(tokens) > i + 2
-                    and tokens[i + 1][0] == "#"
-                    and tokens[i + 2][0] == "["
-                ):
+                if len(tokens) > i + 2 and tokens[i + 1][0] == "#" and tokens[i + 2][0] == "[":
                     setStyling(token[1], M_DOC)
                     multi_doc_commenting = True
                 elif len(tokens) > i + 1 and tokens[i + 1][0] == "#":
@@ -874,9 +842,7 @@ class Nim(qt.QsciLexerCustom):
                 # Number
                 # Check only the first character, because Nim has those weird constants e.g.: 12u8, ...)
                 setStyling(token[1], NUM)
-            elif (
-                (i > 1) and (tokens[i - 2][0] in user_kw_list) and token[0][0].isalpha()
-            ):
+            elif (i > 1) and (tokens[i - 2][0] in user_kw_list) and token[0][0].isalpha():
                 # Class-like definition
                 setStyling(token[1], CLS)
                 cls_descrition = True

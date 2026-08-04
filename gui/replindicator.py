@@ -70,9 +70,7 @@ class ReplIndicator(qt.QLabel):
         # Add the type actions
         for lang in constants.ReplLanguage:
             action_theme = qt.QAction(lang.name, self.selection_menu)
-            action_theme.triggered.connect(
-                functools.partial(self.choose_repl_type, lang)
-            )
+            action_theme.triggered.connect(functools.partial(self.choose_repl_type, lang))
             icon = functions.create_icon(self.ICONS[lang])
             action_theme.setIcon(icon)
             action_theme.setToolTip(self.TOOLTIPS[lang])

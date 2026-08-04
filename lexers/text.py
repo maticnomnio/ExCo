@@ -19,9 +19,10 @@ import settings
 import functions
 import time
 import lexers
+from lexers.baselexer import BaseLexer
 
 
-class Text(qt.QsciLexerCustom):
+class Text(BaseLexer):
     """Lexer for styling normal text documents"""
 
     # Class variables
@@ -62,11 +63,6 @@ class Text(qt.QsciLexerCustom):
 
     def braceStyle(self) -> int:
         return self.styles["Default"]
-
-    def defaultFont(self, style: int | None = None) -> qt.QFont:
-        return qt.QFont(
-            settings.get("current_font_name"), settings.get("current_font_size")
-        )
 
     def styleText(self, start: int, end: int) -> None:
         self.startStyling(start)

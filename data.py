@@ -25,9 +25,7 @@ if getattr(sys, "frozen", False):
     file_directory = os.path.dirname(sys.executable)
 else:
     # The application is not frozen
-    file_directory = os.path.dirname(
-        os.path.abspath(inspect.getfile(inspect.currentframe()))
-    )
+    file_directory = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
 """
 --------------------------------------------------------
@@ -36,7 +34,7 @@ These are the DEFAULT values, override them in the user
 configuration file!
 --------------------------------------------------------
 """
-application_version = "7.10"
+application_version = "7.12"
 # Global variables
 command_line_options = None
 debug_mode = False
@@ -53,9 +51,7 @@ try:
 except:
     home_directory = os.path.expanduser("~")
 # Global string with the resources directory
-resources_directory = os.path.join(application_directory, "resources").replace(
-    "\\", "/"
-)
+resources_directory = os.path.join(application_directory, "resources").replace("\\", "/")
 # Global settings directory
 settings_directory = os.path.join(home_directory, ".exco").replace("\\", "/")
 # Fonts directory
@@ -85,7 +81,7 @@ LIBRARY_VERSIONS = "PyQt{} / QScintilla{}".format(
 )
 
 # Store all Qt keys as a dictionary
-keys = {} 
+keys = {}
 
 global_function_information = {}
 

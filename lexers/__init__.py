@@ -26,22 +26,22 @@ except Exception as ex:
 
 from lexers.ada import *
 from lexers.awk import *
+from lexers.builtin import *
 from lexers.cicode import *
 from lexers.cython import *
 from lexers.functions import *
+from lexers.go import *
 from lexers.nim import *
 from lexers.oberon import *
 from lexers.php import *
 from lexers.python import *
 from lexers.routeros import *
-from lexers.spice import *
-from lexers.smallbasic import *
+from lexers.rust import *
 from lexers.skill import *
+from lexers.smallbasic import *
+from lexers.spice import *
 from lexers.text import *
 from lexers.zig import *
-from lexers.rust import *
-
-from lexers.builtin import *
 
 
 def generate_builtin_lexers():
@@ -75,7 +75,7 @@ def generate_builtin_lexers():
                 cls_text += "    \n"
                 cls_text += "    def __init__(self, parent=None):\n"
                 cls_text += "        super().__init__()\n"
-                cls_text += "        self.set_theme(settings.get(\"theme\"))\n"
+                cls_text += '        self.set_theme(settings.get("theme"))\n'
                 cls_text += "    \n"
                 cls_text += "    def set_theme(self, theme):\n"
                 cls_text += '        self.setDefaultColor(qt.QColor(settings.get_theme()["fonts"]["default"]["color"]))\n'
@@ -97,20 +97,16 @@ def generate_builtin_lexers():
                     cls_text += "                   missing_themes['{}'].append(style)\n".format(
                         lexer_name
                     )
-                    cls_text += "        if len(missing_themes['{}']) != 0:\n".format(
+                    cls_text += "        if len(missing_themes['{}']) != 0:\n".format(lexer_name)
+                    cls_text += "            print(\"Lexer '{}' missing themes:\")\n".format(
                         lexer_name
                     )
+                    cls_text += "            for mt in missing_themes['{}']:\n".format(lexer_name)
+                    cls_text += "                print('    - ' + mt)\n"
                     cls_text += (
-                        "            print(\"Lexer '{}' missing themes:\")\n".format(
+                        "            raise Exception(\"Lexer '{}' has missing themes!\")\n".format(
                             lexer_name
                         )
-                    )
-                    cls_text += "            for mt in missing_themes['{}']:\n".format(
-                        lexer_name
-                    )
-                    cls_text += "                print('    - ' + mt)\n"
-                    cls_text += "            raise Exception(\"Lexer '{}' has missing themes!\")\n".format(
-                        lexer_name
                     )
                 lexer_strings.append(cls_text)
     exec("\n".join(lexer_strings))

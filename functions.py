@@ -127,13 +127,9 @@ def create_pixmap_with_size(pixmap_name, width=None, height=None):
     """
     pixmap = create_pixmap(pixmap_name)
     if width:
-        pixmap = pixmap.scaledToWidth(
-            int(width), qt.Qt.TransformationMode.SmoothTransformation
-        )
+        pixmap = pixmap.scaledToWidth(int(width), qt.Qt.TransformationMode.SmoothTransformation)
     if height:
-        pixmap = pixmap.scaledToHeight(
-            int(height), qt.Qt.TransformationMode.SmoothTransformation
-        )
+        pixmap = pixmap.scaledToHeight(int(height), qt.Qt.TransformationMode.SmoothTransformation)
     return pixmap
 
 
@@ -214,6 +210,7 @@ __LANGUAGE_ICON_MAP = {
     "yaml": "language_icons/logo_yaml.png",
     "zig": "language_icons/logo_zig.png",
     "rust": "language_icons/logo_rust.png",
+    "go": "language_icons/logo_go.png",
     # Generic configs/data
     "ini": "tango_icons/document-properties.png",
     # Fallbacks
@@ -336,9 +333,7 @@ def get_nim_node_tree(nim_code):
     # Nested function for finding the closing parenthesis of parameter definitions
     def get_closing_parenthesis(current_step, lines):
         for ln in range(current_step, len(lines)):
-            if ")" in lines[ln] and (
-                lines[ln].count(")") == (lines[ln].count("(") + 1)
-            ):
+            if ")" in lines[ln] and (lines[ln].count(")") == (lines[ln].count("(") + 1)):
                 return ln
         else:
             return None
@@ -383,9 +378,7 @@ def get_nim_node_tree(nim_code):
                     parameter_string = ""
                     open_index = line_list[current_line_number].find("(") + 1
                     parameter_string += line_list[current_line_number][open_index:]
-                    for i in range(
-                        current_line_number + 1, body_starting_line_number + 1
-                    ):
+                    for i in range(current_line_number + 1, body_starting_line_number + 1):
                         if ")" in line_list[i] and (
                             line_list[i].count(")") == (line_list[i].count("(") + 1)
                         ):
@@ -393,39 +386,27 @@ def get_nim_node_tree(nim_code):
                             current_parameter = line_list[i][:close_index].strip()
                             # Filter out the parameter initialization
                             if "=" in current_parameter:
-                                current_parameter = current_parameter[
-                                    : current_parameter.find("=")
-                                ]
+                                current_parameter = current_parameter[: current_parameter.find("=")]
                             parameter_string += current_parameter
                         else:
                             current_parameter = line_list[i].strip()
                             # Filter out the parameter initialization
                             if "=" in current_parameter:
-                                current_parameter = current_parameter[
-                                    : current_parameter.find("=")
-                                ]
+                                current_parameter = current_parameter[: current_parameter.find("=")]
                             parameter_string += current_parameter
                     parameters = [
-                        par.strip()
-                        for par in parameter_string.split(",")
-                        if par.strip() != ""
+                        par.strip() for par in parameter_string.split(",") if par.strip() != ""
                     ]
                     # Check the return type
-                    split_line = line_list[body_starting_line_number][
-                        close_index:
-                    ].split(":")
+                    split_line = line_list[body_starting_line_number][close_index:].split(":")
                     if len(split_line) > 1:
                         return_type = split_line[1].replace("=", "")
                         return_type = return_type.strip()
                 else:
                     open_index = line_list[current_line_number].find("(") + 1
                     close_index = line_list[current_line_number].find(")")
-                    parameter_string = line_list[current_line_number][
-                        open_index:close_index
-                    ]
-                    parameters = [
-                        par for par in parameter_string.split(",") if par.strip() != ""
-                    ]
+                    parameter_string = line_list[current_line_number][open_index:close_index]
+                    parameters = [par for par in parameter_string.split(",") if par.strip() != ""]
                     # Check the return type
                     split_line = line_list[current_line_number][close_index:].split(":")
                     if len(split_line) > 1:
@@ -447,10 +428,7 @@ def get_nim_node_tree(nim_code):
         if "=" in current_line and current_line.strip().endswith("="):
             # Check if the declaration is a one-liner
             if (current_line.strip().endswith("=") == False) and (
-                (
-                    len(current_line.split("=")) == 2
-                    and current_line.split("=")[1].strip() != ""
-                )
+                (len(current_line.split("=")) == 2 and current_line.split("=")[1].strip() != "")
                 or (
                     len(current_line.split("=")) > 2
                     and current_line[current_line.rfind(")") :].split("=")[1] != ""
@@ -465,15 +443,10 @@ def get_nim_node_tree(nim_code):
                     starting_line_number = body_starting_line_number + 1
                 # Parse the procedure for its local child nodes
                 sub_node_lines = []
-                compare_indentation = get_next_blocks_indentation(
-                    starting_line_number, line_list
-                )
+                compare_indentation = get_next_blocks_indentation(starting_line_number, line_list)
                 for ln in range(starting_line_number, len(line_list)):
                     # Skip empty lines
-                    if (
-                        line_list[ln].strip() == ""
-                        or line_list[ln].strip().startswith("#") == True
-                    ):
+                    if line_list[ln].strip() == "" or line_list[ln].strip().startswith("#") == True:
                         # Add the blank space at the correct indentation level
                         # to have the correct number of lines in the list
                         sub_node_lines.append(" " * compare_indentation)
@@ -489,13 +462,9 @@ def get_nim_node_tree(nim_code):
                     # For loop looped through all of the lines, skip them
                     local_skip_to_line = len(line_list) - 1
                 starting_line_number += previous_offset
-                node = parse_node(
-                    node, sub_node_lines, line_offset=starting_line_number
-                )
+                node = parse_node(node, sub_node_lines, line_offset=starting_line_number)
         elif (
-            search_string == "class"
-            or search_string == "namespace"
-            or search_string == "property"
+            search_string == "class" or search_string == "namespace" or search_string == "property"
         ):
             """special macro identifiers: class, namespace, ..."""
             # Adjust the procedure body starting line as needed
@@ -504,15 +473,10 @@ def get_nim_node_tree(nim_code):
                 starting_line_number = body_starting_line_number + 1
             # Parse the procedure for its local child nodes
             sub_node_lines = []
-            compare_indentation = get_next_blocks_indentation(
-                starting_line_number, line_list
-            )
+            compare_indentation = get_next_blocks_indentation(starting_line_number, line_list)
             for ln in range(starting_line_number, len(line_list)):
                 # Skip empty lines
-                if (
-                    line_list[ln].strip() == ""
-                    or line_list[ln].strip().startswith("#") == True
-                ):
+                if line_list[ln].strip() == "" or line_list[ln].strip().startswith("#") == True:
                     # Add the blank space at the correct indentation level
                     # to have the correct number of lines in the list
                     sub_node_lines.append(" " * compare_indentation)
@@ -649,11 +613,7 @@ def get_nim_node_tree(nim_code):
                     let_statement = False
             elif var_statement == True:
                 if current_indentation == compare_indentation:
-                    if (
-                        ":" in line
-                        and "=" in line
-                        and (line.find(":") < line.find("="))
-                    ):
+                    if ":" in line and "=" in line and (line.find(":") < line.find("=")):
                         type = line.split(":")[1].split("=")[0].strip()
                         line = line.split(":")[0].strip()
                     elif ":" in line and not ("=" in line):
@@ -696,9 +656,7 @@ def get_nim_node_tree(nim_code):
             if line.startswith("import ") or line == "import":
                 if line == "import":
                     import_statement = True
-                    compare_indentation = get_next_blocks_indentation(
-                        line_count + 1, code_lines
-                    )
+                    compare_indentation = get_next_blocks_indentation(line_count + 1, code_lines)
                 else:
                     line = line.replace("import", "")
                     for module in line.split(","):
@@ -712,9 +670,7 @@ def get_nim_node_tree(nim_code):
             elif line.startswith("type ") or line == "type":
                 if line == "type":
                     type_statement = True
-                    compare_indentation = get_next_blocks_indentation(
-                        line_count + 1, code_lines
-                    )
+                    compare_indentation = get_next_blocks_indentation(line_count + 1, code_lines)
                 else:
                     line = line.replace("type", "")
                     type_node = NimNode()
@@ -725,9 +681,7 @@ def get_nim_node_tree(nim_code):
             elif line.startswith("const ") or line == "const":
                 if line == "const":
                     const_statement = True
-                    compare_indentation = get_next_blocks_indentation(
-                        line_count + 1, code_lines
-                    )
+                    compare_indentation = get_next_blocks_indentation(line_count + 1, code_lines)
                 else:
                     line = line.replace("const", "")
                     const_node = NimNode()
@@ -743,9 +697,7 @@ def get_nim_node_tree(nim_code):
             elif line.startswith("let ") or line == "let":
                 if line == "let":
                     let_statement = True
-                    compare_indentation = get_next_blocks_indentation(
-                        line_count + 1, code_lines
-                    )
+                    compare_indentation = get_next_blocks_indentation(line_count + 1, code_lines)
                 else:
                     line = line.replace("let", "")
                     let_node = NimNode()
@@ -761,16 +713,10 @@ def get_nim_node_tree(nim_code):
             elif line.startswith("var ") or line == "var":
                 if line == "var":
                     var_statement = True
-                    compare_indentation = get_next_blocks_indentation(
-                        line_count + 1, code_lines
-                    )
+                    compare_indentation = get_next_blocks_indentation(line_count + 1, code_lines)
                 else:
                     line = line.replace("var", "")
-                    if (
-                        ":" in line
-                        and "=" in line
-                        and (line.find(":") < line.find("="))
-                    ):
+                    if ":" in line and "=" in line and (line.find(":") < line.find("=")):
                         type = line.split(":")[1].split("=")[0].strip()
                         line = line.split(":")[0].strip()
                     elif ":" in line and not ("=" in line):
@@ -943,9 +889,7 @@ def get_python_node_list(python_code):
     nodes = [node for node in ast.walk(parsed_string)]
     # Get import/import_from nodes, combine them into one list and sort them
     import_nodes = [
-        (node.names[0].name, node.lineno)
-        for node in nodes
-        if isinstance(node, ast.Import)
+        (node.names[0].name, node.lineno) for node in nodes if isinstance(node, ast.Import)
     ]
     importfrom_nodes = [
         (node.module, node.lineno) for node in nodes if isinstance(node, ast.ImportFrom)
@@ -1028,18 +972,14 @@ def get_python_node_tree(python_code):
                         )
                         globals_list.append(name)
             return new_nodes
-        elif isinstance(ast_node, ast.AnnAssign) and (
-            level == 0 or parent_node == None
-        ):
+        elif isinstance(ast_node, ast.AnnAssign) and (level == 0 or parent_node == None):
             # Type annotated globals
             new_nodes = []
             target = ast_node.target
             if hasattr(target, "id") == True:
                 name = target.id
                 if not (name in globals_list):
-                    new_nodes.append(
-                        PythonNode(name, "global_variable", ast_node.lineno, level)
-                    )
+                    new_nodes.append(PythonNode(name, "global_variable", ast_node.lineno, level))
                     globals_list.append(name)
             return new_nodes
         elif isinstance(ast_node, ast.Global):
@@ -1061,9 +1001,7 @@ def get_python_node_tree(python_code):
                                 parent_node.children.append(n)
                         else:
                             parent_node.children.append(result)
-                parent_node.children = sorted(
-                    parent_node.children, key=lambda x: x.name
-                )
+                parent_node.children = sorted(parent_node.children, key=lambda x: x.name)
             else:
                 new_nodes = []
                 if hasattr(ast_node, "body"):
@@ -1236,19 +1174,11 @@ def get_c_function_list(c_code):
                 if token == "{" and previous_token == ")":
                     # The function has passed the filter, add it to the list
                     function_list.append((last_found_function, last_line))
-                elif (
-                    token == "("
-                    and re.match(r"\w", previous_token)
-                    and parenthesis_count == 0
-                ):
+                elif token == "(" and re.match(r"\w", previous_token) and parenthesis_count == 0:
                     last_found_function = previous_token
                     last_line = current_line
         # Check for various state changes
-        if (
-            multiline_commenting == False
-            and singleline_commenting == False
-            and stringing == False
-        ):
+        if multiline_commenting == False and singleline_commenting == False and stringing == False:
             if token == "{":
                 curly_count += 1
             elif token == "}":
@@ -1341,9 +1271,7 @@ def get_node_tree_with_ctags(code, parser):
                     [ctags_program, "--version"], stdout=subprocess.PIPE, shell=False
                 ).communicate()[0]
             output_utf = output.decode("utf-8")
-            if output_utf.startswith("Exuberant Ctags") or output_utf.startswith(
-                "Universal Ctags"
-            ):
+            if output_utf.startswith("Exuberant Ctags") or output_utf.startswith("Universal Ctags"):
                 ctags_present = True
         except Exception as ex:
             if data.platform == "Windows":
@@ -1675,30 +1603,22 @@ def get_c_node_tree(c_code):
                         add_node(CNode(include_string, "include", macro_line, 0))
                     elif macro_type == "define":
                         define_macro = macro_tokens[0]
-                        debug_print(
-                            level, "Found define:\n", (level + 1) * "    ", define_macro
-                        )
+                        debug_print(level, "Found define:\n", (level + 1) * "    ", define_macro)
                         add_node(CNode(define_macro, "define", macro_line, 0))
                     elif macro_type == "undef":
                         undef_macro = macro_tokens[0]
-                        debug_print(
-                            level, "Found undef:\n", (level + 1) * "    ", undef_macro
-                        )
+                        debug_print(level, "Found undef:\n", (level + 1) * "    ", undef_macro)
                         add_node(CNode(undef_macro, "undef", macro_line, 0))
                     elif macro_type == "pragma":
                         pragma_macro = macro_tokens[0]
                         # Watcom compiler 'aux' keyword check
                         if pragma_macro == "aux":
                             pragma_macro = macro_tokens[1]
-                        debug_print(
-                            level, "Found pragma:\n", (level + 1) * "    ", pragma_macro
-                        )
+                        debug_print(level, "Found pragma:\n", (level + 1) * "    ", pragma_macro)
                         add_node(CNode(pragma_macro, "pragma", macro_line, 0))
                     elif macro_type == "error":
                         error_macro = " ".join(macro_tokens)[:10] + "..."
-                        debug_print(
-                            level, "Found error:\n", (level + 1) * "    ", error_macro
-                        )
+                        debug_print(level, "Found error:\n", (level + 1) * "    ", error_macro)
                         add_node(CNode(error_macro, "error", macro_line, 0))
                     # Reset the macroing flag
                     macro_tokens = []
@@ -1818,15 +1738,9 @@ def get_c_node_tree(c_code):
                                     prototype,
                                 )
                             elif length == 3:
-                                if (
-                                    "(" in result[1]
-                                    and ")" in result[1]
-                                    and (level == 0)
-                                ):
+                                if "(" in result[1] and ")" in result[1] and (level == 0):
                                     prototype = result[1][: result[1].find("(")]
-                                    add_node(
-                                        CNode(prototype, "prototype", current_line, 0)
-                                    )
+                                    add_node(CNode(prototype, "prototype", current_line, 0))
                                     debug_print(
                                         level,
                                         "Found prototype 1:\n",
@@ -1870,20 +1784,14 @@ def get_c_node_tree(c_code):
                                             else:
                                                 var_name = g[-1]
                                         if var_name.isidentifier():
-                                            add_node(
-                                                CNode(var_name, "var", current_line, 0)
-                                            )
+                                            add_node(CNode(var_name, "var", current_line, 0))
                                             debug_print(
                                                 level,
                                                 "Found variable 1:\n",
                                                 (level + 1) * "    ",
                                                 var_name,
                                             )
-                            elif (
-                                result[-2].isidentifier()
-                                and not ("=" in result)
-                                and (level == 0)
-                            ):
+                            elif result[-2].isidentifier() and not ("=" in result) and (level == 0):
                                 variable = result[-2]
                                 add_node(CNode(variable, "var", current_line, 0))
                                 debug_print(
@@ -1978,9 +1886,7 @@ def get_c_node_tree(c_code):
                     )
                     current_statement_tokens.append("{ ... }")
                     if func_found:
-                        debug_print(
-                            level, "function end '{}':".format(func_name), skip_to_token
-                        )
+                        debug_print(level, "function end '{}':".format(func_name), skip_to_token)
                         current_statement_tokens = []
                 elif token == "}" and previous_token != "'" and next_token != "'":
                     return node_list, i + index
@@ -2043,9 +1949,7 @@ def get_c_node_tree(c_code):
         # Return the accumulated node list
         return node_list, skip_to_token
 
-    main_node_list, skip_to_token = parse_loop(
-        main_tokens, main_node_list, main_current_line, 0, 0
-    )
+    main_node_list, skip_to_token = parse_loop(main_tokens, main_node_list, main_current_line, 0, 0)
 
     # Sort the nodes alphabetically
     def compare_function(item):
@@ -2074,8 +1978,7 @@ def index_strings_in_linelist(search_text, list_of_lines, case_sensitive=False):
     # Check for and extend the list with all matches
     for i, line in enumerate(list_of_lines):
         line_matches = [
-            (i, match.start(), i, match.end())
-            for match in re.finditer(compiled_search_re, line)
+            (i, match.start(), i, match.end()) for match in re.finditer(compiled_search_re, line)
         ]
         list_of_matches.extend(line_matches)
     return list_of_matches
@@ -2124,8 +2027,7 @@ def index_strings_in_text(
         compiled_search_re = re.compile(search_text, re.IGNORECASE)
     # Create the list with all of the matches
     list_of_matches = [
-        (0, match.start(), 0, match.end())
-        for match in re.finditer(compiled_search_re, text)
+        (0, match.start(), 0, match.end()) for match in re.finditer(compiled_search_re, text)
     ]
     return list_of_matches
 
@@ -2344,6 +2246,10 @@ def unixify_remove(whole_path, path_to_remove) -> str:
     return unixify_path(os.path.relpath(whole_path, path_to_remove))
 
 
+def normalize_path(path: str) -> str:
+    return os.path.normpath(os.path.normcase(os.path.abspath(path)))
+
+
 def change_icon_opacity(qicon, opacity):
     pixmap = qicon.pixmap(qicon.actualSize(create_size(256, 256)))
     pixmap = change_opacity(pixmap, opacity)
@@ -2442,11 +2348,7 @@ def performance_timer_show(text=None):
         end_count = current_point - performance_timer_starting_count
         diff_count = current_point - performance_timer_last_point
         performance_timer_last_point = current_point
-        print(
-            "Time: {:.4f}s / diff: {:.4f} -> [{}]".format(
-                end_count, diff_count, info_text
-            )
-        )
+        print("Time: {:.4f}s / diff: {:.4f} -> [{}]".format(end_count, diff_count, info_text))
     except:
         print("[{}] Error!".format(info_text))
 
@@ -2527,9 +2429,7 @@ Docking system helpers
 """
 
 
-def right_replace(
-    text: str, old_substring: str, new_substring: str, max_occurrences: int
-) -> str:
+def right_replace(text: str, old_substring: str, new_substring: str, max_occurrences: int) -> str:
     """
     Replaces the rightmost occurrences of a substring in a given text.
     """
@@ -2576,9 +2476,7 @@ def output_get_file_with_timestamp() -> str:
     sf = os.path.splitext(OUTPUT_FILENAME)
     return os.path.join(
         output_get_backup_directory(),
-        OUTPUT_FILENAME.replace(
-            sf[1], get_default_datetime_formatted_string() + ".txt"
-        ),
+        OUTPUT_FILENAME.replace(sf[1], get_default_datetime_formatted_string() + ".txt"),
     )
 
 
@@ -2599,16 +2497,12 @@ def output_redirect() -> None:
     output_file: str = output_get_file()
 
     # Open file and redirect output
-    f: TextIOWrapper = open(
-        output_file, "w+", encoding="utf-8", newline="\n", errors="replace"
-    )
+    f: TextIOWrapper = open(output_file, "w+", encoding="utf-8", newline="\n", errors="replace")
     sys.stdout = f
     sys.stderr = f
 
     # Adapt exception hook for all threads
-    def exception_hook(
-        exctype: type, value: BaseException, trace: TracebackType
-    ) -> None:
+    def exception_hook(exctype: type, value: BaseException, trace: TracebackType) -> None:
         print("-" * 80)
         print(
             "".join(traceback.format_exception(exctype, value, trace)),
@@ -2755,9 +2649,7 @@ def get_used_symbols(code: str) -> Set[str]:
 
         class NameVisitor(ast.NodeVisitor):
             def visit_Name(self, node):
-                if isinstance(
-                    node.ctx, ast.Load
-                ):  # Only count when reading/using the name
+                if isinstance(node.ctx, ast.Load):  # Only count when reading/using the name
                     used_symbols.add(node.id)
                 self.generic_visit(node)
 

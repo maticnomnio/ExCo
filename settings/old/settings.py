@@ -95,9 +95,7 @@ class Editor:
             if combination.startswith("#"):
                 combination = combination[1:]
             check_list = [
-                (x, getattr(Editor.Keys, x))
-                for x in dir(Editor.Keys)
-                if not x.startswith("__")
+                (x, getattr(Editor.Keys, x)) for x in dir(Editor.Keys) if not x.startswith("__")
             ]
             for name, keys in check_list:
                 if not (isinstance(keys, str)) and not (isinstance(keys, list)):
@@ -213,9 +211,7 @@ class Keys:
 
     @staticmethod
     def check_combination(combination):
-        check_list = [
-            (x, getattr(Keys, x)) for x in dir(Keys) if not x.startswith("__")
-        ]
+        check_list = [(x, getattr(Keys, x)) for x in dir(Keys) if not x.startswith("__")]
         for name, keys in check_list:
             if not (isinstance(keys, str)) and not (isinstance(keys, list)):
                 continue
@@ -410,9 +406,7 @@ class SettingsFileManipulator:
             settings_lines.append("    '{}': {{".format(func_type))
             for func in context_menu_functions[func_type]:
                 settings_lines.append(
-                    "        {}: '{}',".format(
-                        func, context_menu_functions[func_type][func]
-                    )
+                    "        {}: '{}',".format(func, context_menu_functions[func_type][func])
                 )
             settings_lines.append("    },")
         settings_lines.append("}")
@@ -423,9 +417,7 @@ class SettingsFileManipulator:
         for session in stored_sessions:
             settings_lines.append("    '{}': {{".format(session.name))
             if isinstance(session.group, str) or (session.group == None):
-                settings_lines.append(
-                    "        'Group': {},".format(repr(session.group))
-                )
+                settings_lines.append("        'Group': {},".format(repr(session.group)))
             elif isinstance(session.group, tuple) and all(
                 [isinstance(x, str) for x in session.group]
             ):
@@ -443,9 +435,7 @@ class SettingsFileManipulator:
                 settings_lines.append(
                     "            'current-index': {},".format(fields["current-index"])
                 )
-                settings_lines.append(
-                    "            'files': [".format(fields["current-index"])
-                )
+                settings_lines.append("            'files': [".format(fields["current-index"]))
                 for item in fields["files"]:
                     if isinstance(item, dict):
                         settings_lines.append("                {},".format(item))
@@ -625,9 +615,7 @@ class SettingsFileManipulator:
         # Check if he new file is already in the list
         if new_file in self.recent_files:
             # Check if the file is already at the top
-            if self.recent_files.index(new_file) == (
-                self.max_number_of_recent_files - 1
-            ):
+            if self.recent_files.index(new_file) == (self.max_number_of_recent_files - 1):
                 return
             # Remove the old file with the same name as the new file from the list
             self.recent_files.pop(self.recent_files.index(new_file))

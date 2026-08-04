@@ -111,9 +111,7 @@ class ContextMenu(gui.menu.Menu):
 
     def __create_actions(self, action_names):
         for an in action_names:
-            name, function, icon, keys, status_tip = data.global_function_information[
-                an
-            ]
+            name, function, icon, keys, status_tip = data.global_function_information[an]
             action = qt.QAction(name, self)
             action.setToolTip(status_tip)
             action.setStatusTip(status_tip)
@@ -278,9 +276,7 @@ class ContextMenuHex(qt.QGroupBox):
         """
         ContextMenuHex.standard_buttons = dict(ContextMenuHex.stored_standard_buttons)
         ContextMenuHex.special_buttons = dict(ContextMenuHex.stored_special_buttons)
-        ContextMenuHex.horizontal_buttons = dict(
-            ContextMenuHex.stored_horizontal_buttons
-        )
+        ContextMenuHex.horizontal_buttons = dict(ContextMenuHex.stored_horizontal_buttons)
 
     @staticmethod
     def get_settings():
@@ -305,9 +301,7 @@ class ContextMenuHex(qt.QGroupBox):
             button_positions.extend(self.horizontal_button_positions)
         hex_x_size = ContextButton.HEX_IMAGE_SIZE[0] * self.x_scale
         hex_y_size = ContextButton.HEX_IMAGE_SIZE[1] * self.y_scale
-        window_size = self.parent().size() - functions.create_size(
-            hex_x_size, hex_y_size
-        )
+        window_size = self.parent().size() - functions.create_size(hex_x_size, hex_y_size)
         min_x = 0
         min_y = 0
         max_x = 0
@@ -364,12 +358,8 @@ class ContextMenuHex(qt.QGroupBox):
             # Set the button size and location
             button.set_offset(
                 (
-                    self.offset[0]
-                    + button_position[0] * self.x_scale / 0.8
-                    + total_offset[0],
-                    self.offset[1]
-                    + button_position[1] * self.y_scale / 0.8
-                    + total_offset[1],
+                    self.offset[0] + button_position[0] * self.x_scale / 0.8 + total_offset[0],
+                    self.offset[1] + button_position[1] * self.y_scale / 0.8 + total_offset[1],
                 )
             )
             button.dim()
@@ -387,9 +377,7 @@ class ContextMenuHex(qt.QGroupBox):
         self.functions_type = "horizontal"
 
     def create_multiline_repl_buttons(self):
-        inner_buttons = [
-            ContextMenuHex.horizontal_buttons[str(x)] for x in range(19, 26)
-        ]
+        inner_buttons = [ContextMenuHex.horizontal_buttons[str(x)] for x in range(19, 26)]
         self.create_buttons(inner_buttons)
         self.functions_type = "horizontal"
 
@@ -523,17 +511,11 @@ class ContextButton(gui.custombuttons.CustomButton):
                         components.actionfilter.ActionFilter.click_drag_action.function.__name__
                     )
                     if self._parent.functions_type == "standard":
-                        ContextMenuHex.standard_buttons[str(self.number)] = (
-                            function_name
-                        )
+                        ContextMenuHex.standard_buttons[str(self.number)] = function_name
                     elif self._parent.functions_type == "plain":
-                        ContextMenuHex.standard_buttons[str(self.number)] = (
-                            function_name
-                        )
+                        ContextMenuHex.standard_buttons[str(self.number)] = function_name
                     elif self._parent.functions_type == "horizontal":
-                        ContextMenuHex.horizontal_buttons[str(self.number)] = (
-                            function_name
-                        )
+                        ContextMenuHex.horizontal_buttons[str(self.number)] = function_name
                     elif self._parent.functions_type == "special":
                         ContextMenuHex.special_buttons[str(self.number)] = function_name
                     # Show the newly added function

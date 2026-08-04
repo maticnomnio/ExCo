@@ -147,10 +147,7 @@ class CustomTextEdit(qt.QPlainTextEdit):
         char_size = font_metrics.size(0, "X")
         width_in_chars = math.ceil(w / char_size.width())
         height_in_chars = math.floor(h / char_size.height())
-        if (
-            self.__cache_width != width_in_chars
-            or self.__cache_height != height_in_chars
-        ):
+        if self.__cache_width != width_in_chars or self.__cache_height != height_in_chars:
             self.__cache_width = width_in_chars
             self.__cache_height = height_in_chars
             self.resize_event.emit(width_in_chars, height_in_chars)
@@ -384,11 +381,7 @@ class Terminal(qt.QWidget):
             line = self.screen.buffer[y]
             for x in range(self.screen.columns):
                 character = line[x]
-                if (
-                    character.bg != bg
-                    or character.fg != fg
-                    or character.reverse != reverse
-                ):
+                if character.bg != bg or character.fg != fg or character.reverse != reverse:
                     text = "".join(current_char_list)
                     cursor.insertText(text)
                     current_visible_buffer.append(text)

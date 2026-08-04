@@ -82,10 +82,7 @@ def sort_json_keys_custom(obj: Any, key_sort_function: Callable[[str], Any]) -> 
     """
     if isinstance(obj, dict):
         sorted_keys = sorted(obj.keys(), key=key_sort_function)
-        return {
-            key: sort_json_keys_custom(obj[key], key_sort_function)
-            for key in sorted_keys
-        }
+        return {key: sort_json_keys_custom(obj[key], key_sort_function) for key in sorted_keys}
     elif isinstance(obj, list):
         return [sort_json_keys_custom(item, key_sort_function) for item in obj]
     else:
@@ -124,9 +121,7 @@ def pretty_print_html_python_stdlib(input_string):
     # Pretty-print HTML
     try:
         dom = xml.dom.minidom.parseString(unescaped_input)
-        pretty_html = dom.toprettyxml(indent="  ", newl="\n", encoding="UTF-8").decode(
-            "UTF-8"
-        )
+        pretty_html = dom.toprettyxml(indent="  ", newl="\n", encoding="UTF-8").decode("UTF-8")
         return pretty_html
     except Exception as e:
         raise ValueError("Error in pretty-printing HTML: " + str(e))
@@ -142,24 +137,6 @@ def format_clangformat_c_cpp(source_code: str, style: str = "LLVM") -> str:
         check=True,
     )
     return result.stdout.decode()
-
-
-def format_ruff_python(code: str) -> str:
-    with tempfile.TemporaryDirectory() as tmpdir:  # type: ignore
-        file_path: pathlib.Path = pathlib.Path(tmpdir) / "temp_ruff_formatting_file.py"
-        file_path.write_text(code, encoding="utf-8")
-
-        result: subprocess.CompletedProcess[str] = subprocess.run(
-            ["ruff", "format", str(file_path)],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",  # Ensure subprocess handles UTF-8 output
-        )
-
-        if result.returncode != 0:
-            raise RuntimeError(f"Ruff error:\n{result.stderr}")
-
-        return file_path.read_text(encoding="utf-8")
 
 
 def format_zig_code(zig_code_string: str) -> str:
@@ -275,7 +252,9 @@ def format_nim_file(file_path: str) -> bool:
         )
     except CalledProcessError as e:
         # This occurs if 'nph --format' itself encounters an error (e.g., invalid Nim syntax)
-        error_message: str = f"Nim formatting (nph) failed with exit code {e.returncode} for file {file_path}:\n"
+        error_message: str = (
+            f"Nim formatting (nph) failed with exit code {e.returncode} for file {file_path}:\n"
+        )
         if e.stderr:
             error_message += f"STDERR:\n{e.stderr}\n"
 
@@ -311,9 +290,7 @@ def format_python_code(code: str, library: str) -> str:
 
     else:
         # Raise a ValueError for unrecognized formatter names
-        raise ValueError(
-            f"[PYTHON-CODE-FORMATTING] Unknown formatting library selected: {library}"
-        )
+        raise ValueError(f"[PYTHON-CODE-FORMATTING] Unknown formatting library selected: {library}")
 
     # Sort and format imports using isort with Black compatibility
     formatted_code = isort.code(formatted_code, config=isort.Config(profile="black"))
@@ -393,9 +370,7 @@ def __format_tag_with_attributes_on_separate_lines(
     return result
 
 
-def custom_format_html_document_beautifulsoup(
-    html: str, preserve_doctype: bool = True
-) -> str:
+def custom_format_html_document_beautifulsoup(html: str, preserve_doctype: bool = True) -> str:
     """Format an entire HTML document with attributes on separate lines.
 
     Args:
@@ -607,9 +582,7 @@ def format_ruff_python(code: str) -> str:
 
     if exit_code != 0:
         error_message = stderr.strip() if stderr else "Unknown Ruff formatting error."
-        raise RuntimeError(
-            f"Ruff formatting failed with exit code {exit_code}:\n{error_message}"
-        )
+        raise RuntimeError(f"Ruff formatting failed with exit code {exit_code}:\n{error_message}")
     return formatted_code_output  # This now contains the modified file content
 
 
@@ -794,9 +767,7 @@ def parse_nim_file(file_path: str) -> Dict[str, List[Dict[str, Any]]]:
     try:
         command: list[str] = ["ntagger", "--private", file_path]
 
-        programs_path = os.path.normpath(
-            os.path.join(data.resources_directory, "programs")
-        )
+        programs_path = os.path.normpath(os.path.join(data.resources_directory, "programs"))
         os.environ["PATH"] = programs_path + os.pathsep + os.environ.get("PATH", "")
 
         result: subprocess.CompletedProcess[str] = subprocess.run(

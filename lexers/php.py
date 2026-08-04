@@ -19,9 +19,10 @@ import data
 import settings
 import time
 import lexers
+from lexers.baselexer import BaseLexer
 
 
-class Php(qt.QsciLexerCustom):
+class Php(BaseLexer):
     """Lexer for styling Php documents"""
 
     # Class variables
@@ -62,11 +63,6 @@ class Php(qt.QsciLexerCustom):
 
     def braceStyle(self) -> int:
         return self.styles["Default"]
-
-    def defaultFont(self, style: int | None = None) -> qt.QFont:
-        return qt.QFont(
-            settings.get("current_font_name"), settings.get("current_font_size")
-        )
 
     def styleText(self, start: int, end: int) -> None:
         self.startStyling(start)

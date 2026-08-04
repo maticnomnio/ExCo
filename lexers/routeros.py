@@ -19,9 +19,10 @@ import data
 import settings
 import time
 import lexers
+from lexers.baselexer import BaseLexer
 
 
-class RouterOS(qt.QsciLexerCustom):
+class RouterOS(BaseLexer):
     """
     Custom lexer for the RouterOS syntax for MikroTik routers (WinBox)
     """
@@ -700,12 +701,8 @@ class RouterOS(qt.QsciLexerCustom):
         # Initialize superclass
         super().__init__()
         # Set the default style values
-        self.setDefaultColor(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["color"])
-        )
-        self.setDefaultPaper(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["background"])
-        )
+        self.setDefaultColor(qt.QColor(settings.get_theme()["fonts"]["default"]["color"]))
+        self.setDefaultPaper(qt.QColor(settings.get_theme()["fonts"]["default"]["background"]))
         self.setDefaultFont(settings.get_editor_font())
         # Reset autoindentation style
         self.setAutoIndentStyle(0)
@@ -727,11 +724,6 @@ class RouterOS(qt.QsciLexerCustom):
 
     def braceStyle(self) -> int:
         return self.styles["Default"]
-
-    def defaultFont(self, style: int | None = None) -> qt.QFont:
-        return qt.QFont(
-            settings.get("current_font_name"), settings.get("current_font_size")
-        )
 
     def set_theme(self, theme: dict[str, Any]) -> None:
         for style in self.styles:
@@ -775,10 +767,7 @@ class RouterOS(qt.QsciLexerCustom):
         KEYWORD3 = self.styles["Keyword3"]
         # Initialize various states and split the text into tokens
         commenting = False
-        tokens = [
-            (token, len(bytearray(token, "utf-8")))
-            for token in self.splitter.findall(text)
-        ]
+        tokens = [(token, len(bytearray(token, "utf-8"))) for token in self.splitter.findall(text)]
         # Style the tokens accordingly
         for i, token in enumerate(tokens):
             if commenting == True:

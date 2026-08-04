@@ -87,16 +87,10 @@ class Cython(Python):
         # Initialize superclass
         super().__init__()
         # Set default colors
-        self.setDefaultColor(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["color"])
-        )
-        self.setDefaultPaper(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["background"])
-        )
+        self.setDefaultColor(qt.QColor(settings.get_theme()["fonts"]["default"]["color"]))
+        self.setDefaultPaper(qt.QColor(settings.get_theme()["fonts"]["default"]["background"]))
         self.setDefaultFont(
-            qt.QFont(
-                settings.get("current_font_name"), settings.get("current_font_size")
-            )
+            qt.QFont(settings.get("current_font_name"), settings.get("current_font_size"))
         )
         # Initialize the keyword list
         self.init_kwrds()

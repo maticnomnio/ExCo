@@ -32,9 +32,7 @@ print("Pre-build clean-up completed.")
 source_files = ["cython_lexers.pyx"]
 
 ext_modules = [
-    Extension(
-        "cython_lexers", source_files, include_dirs=[], libraries=[], library_dirs=[]
-    )
+    Extension("cython_lexers", source_files, include_dirs=[], libraries=[], library_dirs=[])
 ]
 
 setup(
