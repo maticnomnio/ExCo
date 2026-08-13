@@ -107,9 +107,7 @@ def replace_text_in_files_enum(
                     return_files[file].append(i)
                 else:
                     return_files[file] = [i]
-                file_text_list[i] = re.sub(
-                    compiled_search_re, replace_text, file_text_list[i]
-                )
+                file_text_list[i] = re.sub(compiled_search_re, replace_text, file_text_list[i])
         # Write the replaced text back to the file
         replaced_text = "\n".join(file_text_list)
         write_to_file(replaced_text, file)
@@ -117,9 +115,7 @@ def replace_text_in_files_enum(
     return return_files
 
 
-def find_files_by_name(
-    search_filename, search_dir, case_sensitive=False, search_subdirs=True
-):
+def find_files_by_name(search_filename, search_dir, case_sensitive=False, search_subdirs=True):
     """
     Find file with search_filename string in its name in the specified directory.
     """
@@ -155,6 +151,24 @@ def find_files_by_name(
     return found_file_list
 
 
+def _walk_text_files(search_dir, search_subdirs=True, file_filter=None, cancel_flag=None):
+    """Yield text file paths in search_dir matching file_filter."""
+    if not os.path.isdir(search_dir):
+        return
+    walk_tree = os.walk(search_dir) if search_subdirs else [next(os.walk(search_dir))]
+    for root, subFolders, files in walk_tree:
+        for file in files:
+            if cancel_flag and cancel_flag():
+                return
+            if file_filter is not None:
+                _, file_extension = os.path.splitext(file)
+                if file_extension.lower() not in file_filter:
+                    continue
+            full_with_path = os.path.join(root, file)
+            if test_text_file(full_with_path) is not None:
+                yield full_with_path.replace("\\", "/")
+
+
 def find_files_with_text(
     search_text,
     search_dir,
@@ -170,27 +184,7 @@ def find_files_with_text(
     if os.path.isdir(search_dir) == False:
         return None
     # Create an empty file list
-    text_file_list = []
-    # Check if subdirectories should be included
-    if search_subdirs == True:
-        walk_tree = os.walk(search_dir)
-    else:
-        # Only use the first generator value(only the top directory)
-        walk_tree = [next(os.walk(search_dir))]
-    # "walk" through the directory tree and save the readable files to a list
-    for root, subFolders, files in walk_tree:
-        for file in files:
-            if file_filter is not None:
-                filename, file_extension = os.path.splitext(file)
-                if file_extension.lower() not in file_filter:
-                    continue
-            # Merge the path and filename
-            full_with_path = os.path.join(root, file)
-            if test_text_file(full_with_path) != None:
-                # On windows, the function "os.path.join(root, file)" line gives a combination of "/" and "\\",
-                # which looks weird but works. The replace was added to have things consistent in the return file list.
-                full_with_path = full_with_path.replace("\\", "/")
-                text_file_list.append(full_with_path)
+    text_file_list = list(_walk_text_files(search_dir, search_subdirs, file_filter))
     # Search for the text in found files
     return_file_list = []
     for file in text_file_list:
@@ -203,7 +197,6 @@ def find_files_with_text(
             else:
                 compare_file_text = file_text
                 compare_search_text = search_text
-            #            print(compare_search_text)
             # Check if file contains the search string
             if compare_search_text in compare_file_text:
                 return_file_list.append(file)
@@ -236,27 +229,7 @@ def find_files_with_text_enum(
     elif search_text == "":
         return "Cannot search for empty string!"
 
-    text_file_list = []
-
-    if search_subdirs:
-        walk_tree = os.walk(search_dir)
-    else:
-        walk_tree = [next(os.walk(search_dir))]
-
-    for root, subFolders, files in walk_tree:
-        if cancel_flag():
-            return "Search canceled!"
-        for file in files:
-            if cancel_flag():
-                return "Search canceled!"
-            if file_filter is not None:
-                _, file_extension = os.path.splitext(file)
-                if file_extension.lower() not in file_filter:
-                    continue
-            full_with_path = os.path.join(root, file)
-            if test_text_file(full_with_path) is not None:
-                full_with_path = full_with_path.replace("\\", "/")
-                text_file_list.append(full_with_path)
+    text_file_list = list(_walk_text_files(search_dir, search_subdirs, file_filter, cancel_flag))
 
     return_file_dict = {}
     for file in text_file_list:
@@ -285,9 +258,7 @@ def test_text_file(file_with_path):
     # Try to read all of the lines in the file, return None if there is an error
     # (using Grace Hopper's/Alex Martelli's forgivness/permission principle)
     try:
-        file = open(
-            file_with_path, "r", encoding=locale.getpreferredencoding(), errors="strict"
-        )
+        file = open(file_with_path, "r", encoding=locale.getpreferredencoding(), errors="strict")
         # Read only a couple of lines in the file
         for line in itertools.islice(file, 10):
             line = line
@@ -300,9 +271,7 @@ def test_text_file(file_with_path):
         test_encodings = ["utf-8", "ascii", "utf-16", "utf-32", "iso-8859-1", "latin-1"]
         for current_encoding in test_encodings:
             try:
-                file = open(
-                    file_with_path, "r", encoding=current_encoding, errors="strict"
-                )
+                file = open(file_with_path, "r", encoding=current_encoding, errors="strict")
                 # Read only a couple of lines in the file
                 for line in itertools.islice(file, 10):
                     line = line

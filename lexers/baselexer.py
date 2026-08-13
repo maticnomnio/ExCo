@@ -34,19 +34,15 @@ class BaseLexer(qt.QsciLexerCustom):
         # Initialize superclass
         super().__init__(parent)
         # Set the default style values
-        self.setDefaultColor(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["color"])
-        )
-        self.setDefaultPaper(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["background"])
-        )
+        self.setDefaultColor(qt.QColor(settings.get_theme()["fonts"]["default"]["color"]))
+        self.setDefaultPaper(qt.QColor(settings.get_theme()["fonts"]["default"]["background"]))
         self.setDefaultFont(settings.get_editor_font())
         # Set the font colors
         self.setFont(settings.get_current_font(), 0)
         # Reset autoindentation style
         self.setAutoIndentStyle(0)
         # Set the theme
-        self.set_theme()
+        self.set_theme(settings.get_theme())
 
     def set_font(self, style_name: str, style_options: dict[str, Any]) -> None:
         style_index = self.styles[style_name]
@@ -90,9 +86,7 @@ class BaseLexer(qt.QsciLexerCustom):
         return self.styles["default"]
 
     def defaultFont(self, style: int | None = None) -> qt.QFont:
-        return qt.QFont(
-            settings.get("current_font_name"), settings.get("current_font_size")
-        )
+        return qt.QFont(settings.get("current_font_name"), settings.get("current_font_size"))
 
     def styleText(self, start: int, end: int) -> None:
         raise Exception("[BaseLexer] Styling function needs to be overriden!")

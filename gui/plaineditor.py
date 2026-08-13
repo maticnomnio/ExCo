@@ -93,9 +93,7 @@ class PlainEditor(gui.baseeditor.BaseEditor):
             self.main_form.display.repl_clear_tab()
 
         # Clear messages
-        self.internals.add_corner_button(
-            "tango_icons/edit-clear.png", "Clear messages", clear
-        )
+        self.internals.add_corner_button("tango_icons/edit-clear.png", "Clear messages", clear)
 
     def contextMenuEvent(self, event):
         # Built-in context menu

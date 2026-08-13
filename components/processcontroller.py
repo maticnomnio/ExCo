@@ -6,20 +6,20 @@ For more information check the 'LICENSE.txt' file.
 For complete license information of the dependencies, check the 'additional_licenses' directory.
 """
 
+import json
 import os
 import traceback
-import multiprocessing.connection
-import psutil
 
 import data
 import functions
-import components.communicator
 
 
 PID_FILE = functions.unixify_join(data.settings_directory, "pid_list.txt")
 
 
 def is_pid_running(pid):
+    import psutil
+
     try:
         if not psutil.pid_exists(pid):
             return False
@@ -34,42 +34,64 @@ def is_pid_running(pid):
 
         return False
     except Exception:
-        #        traceback.print_exc()
         return False
+
+
+def get_running_pids() -> list[int]:
+    pids = []
+    if os.path.isfile(PID_FILE):
+        with open(PID_FILE, "r", encoding="utf-8") as f:
+            for line in f:
+                pid = line.strip()
+                if pid.isdigit():
+                    pid = int(pid)
+                    if is_pid_running(pid):
+                        pids.append(pid)
+    return sorted(pids)
+
+
+def inbox_path(pid: int) -> str:
+    return functions.unixify_join(data.settings_directory, f"instance_{pid}.json")
+
+
+def send_to_instance(pid: int, message: dict) -> None:
+    path = inbox_path(pid)
+    with open(path, "w+", encoding="utf-8", newline="\n") as f:
+        json.dump(message, f, indent=4, ensure_ascii=False)
+
+
+def broadcast(message: dict, exclude_self: bool = True) -> list[int]:
+    own_pid = os.getpid()
+    targets = []
+    for pid in get_running_pids():
+        if exclude_self and pid == own_pid:
+            continue
+        send_to_instance(pid, message)
+        targets.append(pid)
+    return targets
+
+
+def _cleanup_stale_inboxes(live_pids: set) -> None:
+    for fname in os.listdir(data.settings_directory):
+        if fname.startswith("instance_") and fname.endswith(".json"):
+            pid_str = fname[9:-5]
+            if pid_str.isdigit() and int(pid_str) not in live_pids:
+                try:
+                    os.remove(os.path.join(data.settings_directory, fname))
+                except OSError:
+                    pass
 
 
 def check_opened_excos():
     try:
-        if os.path.isfile(PID_FILE):
-            with open(PID_FILE, "r+", encoding="utf-8") as f:
-                lines = f.readlines()
-        else:
-            with open(PID_FILE, "w+", encoding="utf-8") as f:
-                lines = []
-
-        filtered_list = [str(os.getpid())]
-
-        for l in lines:
-            pid = l.strip()
-            if not pid.isdigit():
-                continue
-
-            pid = int(pid)
-            if is_pid_running(pid):
-                filtered_list.append(str(pid))
+        live_pids = get_running_pids()
+        all_pids = [str(os.getpid())] + [str(p) for p in live_pids if p != os.getpid()]
 
         with open(PID_FILE, "w+", encoding="utf-8") as f:
-            f.write("\n".join(filtered_list))
+            f.write("\n".join(all_pids))
 
-        return len(filtered_list)
+        _cleanup_stale_inboxes(set(int(p) for p in all_pids))
+
+        return len(all_pids)
     except:
         return -1
-
-
-def send_raw_command(command):
-    connection = multiprocessing.connection.Client(
-        (components.communicator.ADDRESS, components.communicator.PORT),
-        authkey=components.communicator.PASSWORD.encode("utf-8"),
-    )
-    connection.send(("PRE-START {}".format(os.getpid()), command))
-    connection.close()

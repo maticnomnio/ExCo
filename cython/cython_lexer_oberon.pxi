@@ -289,7 +289,6 @@ cdef inline char check_oberon_keyword(char* token_string) nogil:
     
 cdef inline char check_oberon_type(char* token_string) nogil:
     """C function for checking if the token is a type decleration"""
-    global oberon_types_kw_list_length
     global c_oberon_types_list
     cdef int i
     for i in range(oberon_types_list_length):

@@ -21,7 +21,6 @@ from gui import (
     plaineditor,
     stylesheets,
     tabwidget,
-    terminal,
     treedisplays,
 )
 
@@ -135,6 +134,8 @@ class TheBox(qt.QSplitter):
         functions.process_events()
 
     def get_child_boxes(self):
+        import gui.terminal as terminal
+
         classes, inverted_classes = self.main_form.view.get_layout_classes()
         children = {}
         for i in range(self.count()):

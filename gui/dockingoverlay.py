@@ -49,9 +49,7 @@ class DockingOverlay:
             self.widget = widget
             self.setAcceptDrops(True)
             self.setScaledContents(False)
-            self.setAlignment(
-                qt.Qt.AlignmentFlag.AlignHCenter | qt.Qt.AlignmentFlag.AlignVCenter
-            )
+            self.setAlignment(qt.Qt.AlignmentFlag.AlignHCenter | qt.Qt.AlignmentFlag.AlignVCenter)
             self.setStyleSheet(
                 f"""
 QLabel {{
@@ -217,7 +215,7 @@ QLabel:hover {{
             box.setSizes([split_size] * box.count())
             # Save layout
             main_form.view.layout_save()
-            
+
             return super().dropEvent(event)
 
     @staticmethod
@@ -303,11 +301,7 @@ QLabel:hover {{
                     name = "left"
                 elif i == 1:
                     exp_pos = (
-                        (
-                            right[0]
-                            - (widget.geometry().width() * 1 / 3)
-                            + point_size[0]
-                        ),
+                        (right[0] - (widget.geometry().width() * 1 / 3) + point_size[0]),
                         top[1],
                     )
                     exp_size = (
@@ -325,11 +319,7 @@ QLabel:hover {{
                 elif i == 3:
                     exp_pos = (
                         left[0],
-                        (
-                            bottom[1]
-                            - (widget.geometry().height() * 1 / 3)
-                            + point_size[1]
-                        ),
+                        (bottom[1] - (widget.geometry().height() * 1 / 3) + point_size[1]),
                     )
                     exp_size = (
                         widget.geometry().width(),
@@ -348,13 +338,13 @@ QLabel:hover {{
                     "various/plus.png",
                 )
                 dock_point.show()
-                
+
         qt.QCoreApplication.processEvents()
 
     def hide(self):
         if self.overlay_label != None:
             self.overlay_label.hide()
-        
+
         for w in DockingOverlay.storage:
             if hasattr(w, "description"):
                 d = w.description

@@ -58,13 +58,13 @@ class TheSquid:
                 if hasattr(window.widget(i), "corner_widget"):
                     if settings.get("custom_menu_scale") != None:
                         window.widget(i).corner_widget.setIconSize(
-                            qt.QSize(settings.get("custom_menu_scale"), settings.get("custom_menu_scale"))
+                            qt.QSize(
+                                settings.get("custom_menu_scale"), settings.get("custom_menu_scale")
+                            )
                         )
                     else:
                         window.widget(i).corner_widget.setIconSize(qt.QSize(16, 16))
                 if hasattr(window.widget(i), "internals"):
                     window.widget(i).internals.restyle_corner_button_icons()
-                if isinstance(
-                    window.widget(i), TheSquid.__module_customeditor.TreeDisplayBase
-                ):
+                if isinstance(window.widget(i), TheSquid.__module_customeditor.TreeDisplayBase):
                     window.widget(i).update_styles()

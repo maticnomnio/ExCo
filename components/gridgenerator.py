@@ -45,11 +45,7 @@ class GridGenerator:
         self.covered_positions = []
         self.add_position(self.first_position)
         self.current_direction = 1
-        if (
-            grid_type != "circular"
-            and grid_type != "trapezoid"
-            and grid_type != "rectangular"
-        ):
+        if grid_type != "circular" and grid_type != "trapezoid" and grid_type != "rectangular":
             raise Exception("Unknown grid type specified!")
         elif grid_type == "trapezoid":
             self.grid_columns = grid_columns

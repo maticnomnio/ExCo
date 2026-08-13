@@ -52,6 +52,7 @@ class LanguageIcon(enum.Enum):
     YAML = "language_icons/logo_yaml.png"
     ZIG = "language_icons/logo_zig.png"
     RUST = "language_icons/logo_rust.png"
+    GO = "language_icons/logo_go.png"
     INI = "tango_icons/document-properties.png"
     TEXT = "tango_icons/text-x-generic.png"
     UNKNOWN = "tango_icons/file.png"
@@ -122,6 +123,7 @@ supported_file_extentions = {
     "yaml": [".yml", ".yaml"],
     "zig": [".zig", ".zon"],
     "rust": [".rs"],
+    "go": [".go"],
 }
 
 

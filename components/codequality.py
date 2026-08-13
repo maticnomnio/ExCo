@@ -6,12 +6,12 @@ import collections
 import enum
 import html
 import html.parser
-import importlib.util
 import io
 import json
 import os
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -82,10 +82,7 @@ def sort_json_keys_custom(obj: Any, key_sort_function: Callable[[str], Any]) -> 
     """
     if isinstance(obj, dict):
         sorted_keys = sorted(obj.keys(), key=key_sort_function)
-        return {
-            key: sort_json_keys_custom(obj[key], key_sort_function)
-            for key in sorted_keys
-        }
+        return {key: sort_json_keys_custom(obj[key], key_sort_function) for key in sorted_keys}
     elif isinstance(obj, list):
         return [sort_json_keys_custom(item, key_sort_function) for item in obj]
     else:
@@ -124,9 +121,7 @@ def pretty_print_html_python_stdlib(input_string):
     # Pretty-print HTML
     try:
         dom = xml.dom.minidom.parseString(unescaped_input)
-        pretty_html = dom.toprettyxml(indent="  ", newl="\n", encoding="UTF-8").decode(
-            "UTF-8"
-        )
+        pretty_html = dom.toprettyxml(indent="  ", newl="\n", encoding="UTF-8").decode("UTF-8")
         return pretty_html
     except Exception as e:
         raise ValueError("Error in pretty-printing HTML: " + str(e))
@@ -142,24 +137,6 @@ def format_clangformat_c_cpp(source_code: str, style: str = "LLVM") -> str:
         check=True,
     )
     return result.stdout.decode()
-
-
-def format_ruff_python(code: str) -> str:
-    with tempfile.TemporaryDirectory() as tmpdir:  # type: ignore
-        file_path: pathlib.Path = pathlib.Path(tmpdir) / "temp_ruff_formatting_file.py"
-        file_path.write_text(code, encoding="utf-8")
-
-        result: subprocess.CompletedProcess[str] = subprocess.run(
-            ["ruff", "format", str(file_path)],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",  # Ensure subprocess handles UTF-8 output
-        )
-
-        if result.returncode != 0:
-            raise RuntimeError(f"Ruff error:\n{result.stderr}")
-
-        return file_path.read_text(encoding="utf-8")
 
 
 def format_zig_code(zig_code_string: str) -> str:
@@ -273,14 +250,16 @@ def format_nim_file(file_path: str) -> bool:
             "The 'nph' executable was not found. "
             "Please ensure the Nim 'nph' tool is installed and in your system's PATH."
         )
-    except CalledProcessError as e:
+    except subprocess.CalledProcessError as e:
         # This occurs if 'nph --format' itself encounters an error (e.g., invalid Nim syntax)
-        error_message: str = f"Nim formatting (nph) failed with exit code {e.returncode} for file {file_path}:\n"
+        error_message: str = (
+            f"Nim formatting (nph) failed with exit code {e.returncode} for file {file_path}:\n"
+        )
         if e.stderr:
             error_message += f"STDERR:\n{e.stderr}\n"
 
         # Re-raise the original exception
-        raise CalledProcessError(
+        raise subprocess.CalledProcessError(
             returncode=e.returncode,
             cmd=e.cmd,
             output=e.output,
@@ -311,9 +290,7 @@ def format_python_code(code: str, library: str) -> str:
 
     else:
         # Raise a ValueError for unrecognized formatter names
-        raise ValueError(
-            f"[PYTHON-CODE-FORMATTING] Unknown formatting library selected: {library}"
-        )
+        raise ValueError(f"[PYTHON-CODE-FORMATTING] Unknown formatting library selected: {library}")
 
     # Sort and format imports using isort with Black compatibility
     formatted_code = isort.code(formatted_code, config=isort.Config(profile="black"))
@@ -393,9 +370,7 @@ def __format_tag_with_attributes_on_separate_lines(
     return result
 
 
-def custom_format_html_document_beautifulsoup(
-    html: str, preserve_doctype: bool = True
-) -> str:
+def custom_format_html_document_beautifulsoup(html: str, preserve_doctype: bool = True) -> str:
     """Format an entire HTML document with attributes on separate lines.
 
     Args:
@@ -455,6 +430,23 @@ class RuffCommand(enum.Enum):
         return self.value
 
 
+def _find_executable(name: str) -> str:
+    """
+    Return the absolute path to an executable found on the system PATH.
+
+    Raises:
+        RuntimeError: If the executable is not reachable on the PATH.
+    """
+    executable: Optional[str] = shutil.which(name)
+    if executable is None:
+        raise RuntimeError(
+            f"'{name}' is not reachable on your system PATH. "
+            f"Please install '{name}' and make sure it is available on the PATH "
+            f"(e.g. by activating the Python environment it was installed into)."
+        )
+    return executable
+
+
 def run_ruff_on_code_snippet(
     code: str,
     ruff_subcommand: RuffCommand,
@@ -487,10 +479,6 @@ def run_ruff_on_code_snippet(
     if ruff_args is None:
         ruff_args = []
 
-    spec = importlib.util.find_spec("ruff")
-    if spec is None:
-        raise RuntimeError(f"Ruff is not installed!")
-
     # Determine creationflags for Windows to prevent console window pop-up
     creation_flags = 0
     if sys.platform == "win32":
@@ -501,9 +489,7 @@ def run_ruff_on_code_snippet(
         file_path.write_text(code, encoding="utf-8")
 
         command: List[str] = [
-            "python",
-            "-m",
-            "ruff",
+            _find_executable("ruff"),
             str(ruff_subcommand),
             str(file_path),
         ] + ruff_args
@@ -556,16 +542,12 @@ def run_ruff_command(
     if ruff_args is None:
         ruff_args = []
 
-    spec = importlib.util.find_spec("ruff")
-    if spec is None:
-        raise RuntimeError(f"Ruff is not installed!")
-
     # Determine creationflags for Windows to prevent console window pop-up
     creation_flags = 0
     if sys.platform == "win32":
         creation_flags = subprocess.CREATE_NO_WINDOW
 
-    command: List[str] = ["python", "-m", "ruff", str(ruff_subcommand)] + ruff_args
+    command: List[str] = [_find_executable("ruff"), str(ruff_subcommand)] + ruff_args
 
     try:
         result: subprocess.CompletedProcess[str] = subprocess.run(
@@ -607,9 +589,7 @@ def format_ruff_python(code: str) -> str:
 
     if exit_code != 0:
         error_message = stderr.strip() if stderr else "Unknown Ruff formatting error."
-        raise RuntimeError(
-            f"Ruff formatting failed with exit code {exit_code}:\n{error_message}"
-        )
+        raise RuntimeError(f"Ruff formatting failed with exit code {exit_code}:\n{error_message}")
     return formatted_code_output  # This now contains the modified file content
 
 
@@ -663,30 +643,29 @@ def analyze_pyflakes_file(
     file_path: Union[str, pathlib.Path], pyflakes_args: Optional[List[str]] = None
 ) -> Tuple[int, str, str]:
     """
-    Analyzes a Python file using the 'pyflakes' command-line tool.
+    Analyzes a Python file using pyflakes in pure-Python mode (in-process).
+
+    The file is scanned with the pyflakes API directly, so no external
+    executable is needed.
 
     Args:
         file_path: The path to the Python file to analyze. Can be a string or pathlib.Path.
-        pyflakes_args: An optional list of additional arguments to pass to the 'pyflakes' command.
+        pyflakes_args: Unused; pyflakes command-line options are not supported in-process.
 
     Returns:
         A tuple containing:
-        - int: The exit code of the 'pyflakes' process (0 for no issues, non-zero if issues are found).
-        - str: The standard output from the 'pyflakes' process (contains analysis findings).
-        - str: The standard error from the 'pyflakes' process (for process errors).
+        - int: The number of findings (0 for no issues, non-zero if issues are found).
+        - str: The reported findings.
+        - str: Errors (e.g. syntax errors) reported by pyflakes.
 
     Raises:
-        FileNotFoundError: If the 'pyflakes' executable is not found in the system's PATH.
+        RuntimeError: If pyflakes is not importable.
         ValueError: If the provided file_path does not exist or is not a file.
-        subprocess.CalledProcessError: If the 'pyflakes' command itself fails (e.g., due to internal errors).
-        Exception: For any other unexpected errors during subprocess execution.
     """
-    if pyflakes_args is None:
-        pyflakes_args = []
-
-    spec = importlib.util.find_spec("pyflakes")
-    if spec is None:
-        raise RuntimeError(f"Pyflakes is not installed!")
+    if pyflakes_args:
+        raise ValueError(
+            "pyflakes command-line options are not supported in pure-Python mode."
+        )
 
     if not isinstance(file_path, pathlib.Path):
         file_path = pathlib.Path(file_path)
@@ -696,40 +675,31 @@ def analyze_pyflakes_file(
     if not file_path.is_file():
         raise ValueError(f"Path is not a file: {file_path}")
 
-    # Determine creationflags for Windows to prevent console window pop-up
-    # This flag has no effect on non-Windows platforms.
-    creation_flags = 0
-    if sys.platform == "win32":
-        creation_flags = subprocess.CREATE_NO_WINDOW
+    try:
+        import pyflakes.api
+        import pyflakes.reporter
+    except ImportError:
+        raise RuntimeError(
+            "pyflakes is not installed. Install it into the Python environment "
+            "Ex.Co. is running in (e.g. 'pip install pyflakes')."
+        )
+
+    source: str = file_path.read_text(encoding="utf-8")
+    warnings_stream = io.StringIO()
+    errors_stream = io.StringIO()
+    reporter = pyflakes.reporter.Reporter(warnings_stream, errors_stream)
 
     try:
-        command: List[str] = [
-            "python",
-            "-m",
-            "pyflakes",
-            str(file_path),
-        ] + pyflakes_args
-
-        result: subprocess.CompletedProcess[str] = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            check=False,
-            encoding="utf-8",
-            creationflags=creation_flags,  # <-- Added this line
-        )
-
-        return result.returncode, result.stdout.strip(), result.stderr.strip()
-
-    except FileNotFoundError:
-        raise FileNotFoundError(
-            "The 'pyflakes' executable was not found. "
-            "Please ensure pyflakes is installed and 'pyflakes' is in your system's PATH."
-        )
+        warning_count: int = pyflakes.api.check(source, str(file_path), reporter)
     except Exception as e:
         raise Exception(
             f"An unexpected error occurred while running pyflakes on file '{file_path}': {e}"
         )
+
+    stdout: str = warnings_stream.getvalue().strip()
+    stderr: str = errors_stream.getvalue().strip()
+    exit_code: int = 1 if warning_count else 0
+    return exit_code, stdout, stderr
 
 
 def parse_nim_tags(text: str) -> Dict[str, List[Dict[str, Any]]]:
@@ -794,9 +764,7 @@ def parse_nim_file(file_path: str) -> Dict[str, List[Dict[str, Any]]]:
     try:
         command: list[str] = ["ntagger", "--private", file_path]
 
-        programs_path = os.path.normpath(
-            os.path.join(data.resources_directory, "programs")
-        )
+        programs_path = os.path.normpath(os.path.join(data.resources_directory, "programs"))
         os.environ["PATH"] = programs_path + os.pathsep + os.environ.get("PATH", "")
 
         result: subprocess.CompletedProcess[str] = subprocess.run(

@@ -20,9 +20,10 @@ import settings
 
 import functions
 import lexers
+from lexers.baselexer import BaseLexer
 
 
-class Ada(qt.QsciLexerCustom):
+class Ada(BaseLexer):
     """Custom lexer for the Ada programming languages"""
 
     styles: dict[str, int] = {

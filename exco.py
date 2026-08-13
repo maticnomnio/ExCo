@@ -9,7 +9,6 @@ For complete license information of the dependencies, check the 'additional_lice
 ##  FILE DESCRIPTION:
 ##      Execute this file to start Ex.Co.
 
-
 import os
 import sys
 import argparse
@@ -88,9 +87,7 @@ def parse_arguments():
     )
     # Single file argument
     help_string = "Single file passed as an argument, "
-    help_string += (
-        'Used for openning files with a desktops "Open with..." functionality'
-    )
+    help_string += 'Used for openning files with a desktops "Open with..." functionality'
     file_group.add_argument(
         "single_file", action="store", nargs="?", default=None, help=help_string
     )
@@ -140,19 +137,14 @@ def main():
         if number_of_instances > 1 and file_arguments is not None:
             try:
                 _data = {"command": "open", "arguments": file_arguments}
-                #                components.processcontroller.send_raw_command(_data)
-                fc = components.communicator.FileCommunicator(
-                    "OPEN-IN-EXISTING-INSTANCE"
-                )
-                fc.send_data(_data)
+                components.processcontroller.broadcast(_data)
                 return
             except:
                 pass
         elif number_of_instances > 1:
             try:
                 _data = {"command": "show", "arguments": None}
-                fc = components.communicator.FileCommunicator("SHOW-OPEN-INSTANCE")
-                fc.send_data(_data)
+                components.processcontroller.broadcast(_data)
                 return
             except:
                 pass

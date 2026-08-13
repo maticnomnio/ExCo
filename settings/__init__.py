@@ -54,7 +54,7 @@ def get_editor_font():
 # This list specifies the names under which the functionality will be
 # exposed as global functions in the current module's namespace.
 # These names form the 'exposed API'.
-exposed_api_names = ["load", "save", "save_last_layout", "add_recent_file"]
+exposed_api_names = ["load", "save_last_layout", "add_recent_file"]
 
 # This list maps the desired exposed API names to the actual method names
 # on the internal object (which is assumed to be __settings_manipulator).
@@ -62,7 +62,6 @@ exposed_api_names = ["load", "save", "save_last_layout", "add_recent_file"]
 # 'exposed_function' is the name it will be given in the current global scope.
 exposed_api_map = [
     {"method": "load_settings", "exposed_function": "load"},
-    {"method": "save_settings", "exposed_function": "save"},
     {"method": "save_last_layout", "exposed_function": "save_last_layout"},
     {"method": "add_recent_file", "exposed_function": "add_recent_file"},
 ]
@@ -70,7 +69,7 @@ exposed_api_map = [
 # --- Dynamic Function Definition ---
 
 # It is assumed that an instance of a settings handler class,
-# which contains the actual logic (e.g., load_settings, save_settings),
+# which contains the actual logic (e.g., load_settings),
 # has been instantiated and assigned to a private/internal variable like:
 # __settings_manipulator = SettingsManipulatorClass(...)
 

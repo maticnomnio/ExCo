@@ -26,7 +26,6 @@ from gui.hexview import *
 from gui.menu import *
 from gui.plaineditor import *
 from gui.templates import *
-from gui.terminal import *
 from gui.treedisplays import *
 
 
@@ -65,9 +64,7 @@ class TabWidget(qt.QTabWidget):
             self.setDrawBase(False)
 
         def set_style(self):
-            close_image = functions.get_resource_file(
-                settings.get_theme()["close-image"]
-            )
+            close_image = functions.get_resource_file(settings.get_theme()["close-image"])
             close_hover_image = functions.get_resource_file(
                 settings.get_theme()["close-hover-image"]
             )
@@ -77,9 +74,7 @@ class TabWidget(qt.QTabWidget):
             right_arrow_hover_image = functions.get_resource_file(
                 settings.get_theme()["right-arrow-hover-image"]
             )
-            left_arrow_image = functions.get_resource_file(
-                settings.get_theme()["left-arrow-image"]
-            )
+            left_arrow_image = functions.get_resource_file(settings.get_theme()["left-arrow-image"])
             left_arrow_hover_image = functions.get_resource_file(
                 settings.get_theme()["left-arrow-hover-image"]
             )
@@ -200,16 +195,12 @@ QTabBar::tab:selected {{
             tab_widget_name = tab_widget.name.lower()
             # Clear REPL MESSAGES tab action
             clear_repl_action = qt.QAction("Clear messages", self)
-            clear_repl_action.setIcon(
-                functions.create_icon("tango_icons/edit-clear.png")
-            )
+            clear_repl_action.setIcon(functions.create_icon("tango_icons/edit-clear.png"))
             clear_repl_action.triggered.connect(main_form.display.repl_clear_tab)
 
             if hasattr(widget, "save_path") == True:
                 update_cwd_action = qt.QAction("Update CWD", self)
-                update_cwd_action.setIcon(
-                    functions.create_icon("tango_icons/update-cwd.png")
-                )
+                update_cwd_action.setIcon(functions.create_icon("tango_icons/update-cwd.png"))
                 update_cwd_action.triggered.connect(update_cwd)
                 self.addAction(update_cwd_action)
                 self.addSeparator()
@@ -221,16 +212,12 @@ QTabBar::tab:selected {{
                 cb.clear(mode=cb.Mode.Clipboard)
                 cb.setText(widget.name, mode=cb.Mode.Clipboard)
 
-            clipboard_copy_action.setIcon(
-                functions.create_icon("tango_icons/edit-copy.png")
-            )
+            clipboard_copy_action.setIcon(functions.create_icon("tango_icons/edit-copy.png"))
             clipboard_copy_action.triggered.connect(clipboard_copy)
             self.addAction(clipboard_copy_action)
             # Copy path
             if self.__check_for_editor(tab_widget):
-                clipboard_copy_path_action = qt.QAction(
-                    "Copy document path to clipboard", self
-                )
+                clipboard_copy_path_action = qt.QAction("Copy document path to clipboard", self)
 
                 def clipboard_path_copy():
                     cb = data.application.clipboard()
@@ -294,9 +281,7 @@ QTabBar::tab:selected {{
             # Closing
             self.addSeparator()
             close_other_action = qt.QAction("Close all other tabs in this window", self)
-            close_other_action.setIcon(
-                functions.create_icon("tango_icons/close-all-tabs.png")
-            )
+            close_other_action.setIcon(functions.create_icon("tango_icons/close-all-tabs.png"))
             close_other_action.triggered.connect(
                 functools.partial(main_form.close_window_tabs, tab_widget, widget)
             )
@@ -312,9 +297,7 @@ QTabBar::tab:selected {{
             else:
                 return False
 
-        def __create_diff_action(
-            self, action_name, main_form, compare_tab_1, compare_tab_2
-        ):
+        def __create_diff_action(self, action_name, main_form, compare_tab_1, compare_tab_2):
             def difference_function(main_form, compare_tab_1, compare_tab_2):
                 # Check for text documents in both tabs
                 if (
@@ -341,14 +324,10 @@ QTabBar::tab:selected {{
                 text_2 = compare_tab_2.text()
                 text_2_name = compare_tab_2.name
                 # Display the text difference
-                main_form.display.show_text_difference(
-                    text_1, text_2, text_1_name, text_2_name
-                )
+                main_form.display.show_text_difference(text_1, text_2, text_1_name, text_2_name)
 
             diff_action = qt.QAction(action_name, self)
-            diff_action.setIcon(
-                functions.create_icon("tango_icons/compare-text-main.png")
-            )
+            diff_action.setIcon(functions.create_icon("tango_icons/compare-text-main.png"))
             function = functools.partial(
                 difference_function, main_form, compare_tab_1, compare_tab_2
             )
@@ -415,10 +394,7 @@ QTabBar::tab:selected {{
         self.tabBar().installEventFilter(self)
 
     def customize_tab_bar(self):
-        if (
-            settings.get("custom_menu_scale") != None
-            and settings.get("custom_menu_font") != None
-        ):
+        if settings.get("custom_menu_scale") != None and settings.get("custom_menu_font") != None:
             self.tabBar().setFont(qt.QFont(*settings.get("custom_menu_font")))
             new_icon_size = functions.create_size(
                 settings.get("custom_menu_scale"), settings.get("custom_menu_scale")
@@ -458,9 +434,7 @@ QTabBar::tab:selected {{
         self.pixmap = qt.QPixmap(self.tabRect.size())
         self.tabBar().render(self.pixmap, qt.QPoint(), qt.QRegion(self.tabRect))
         painter = qt.QPainter(self.pixmap)
-        painter.setCompositionMode(
-            painter.CompositionMode.CompositionMode_DestinationIn
-        )
+        painter.setCompositionMode(painter.CompositionMode.CompositionMode_DestinationIn)
         painter.fillRect(self.pixmap.rect(), qt.QColor(0, 0, 0, 64))
         painter.end()
 
@@ -507,10 +481,7 @@ QTabBar::tab:selected {{
         self.move_range = pos.x() - tabRect.left(), tabRect.right() - pos.x()
 
     def eventFilter(self, source, event):
-        if (
-            event.type() == qt.QEvent.Type.KeyPress
-            or event.type() == qt.QEvent.Type.KeyRelease
-        ):
+        if event.type() == qt.QEvent.Type.KeyPress or event.type() == qt.QEvent.Type.KeyRelease:
             # Check indication
             self.main_form.view.indication_check()
 
@@ -522,9 +493,7 @@ QTabBar::tab:selected {{
                 qt.QTimer.singleShot(0, self._setmove_range)
             elif event.type() == qt.QEvent.Type.MouseButtonRelease:
                 self.move_range = None
-            elif (
-                event.type() == qt.QEvent.Type.MouseMove and self.move_range is not None
-            ):
+            elif event.type() == qt.QEvent.Type.MouseMove and self.move_range is not None:
                 pos = event.pos()
                 if self.tabBar().rect().contains(pos):
                     self.drag_lock = False
@@ -716,9 +685,7 @@ QTabBar::tab:selected {{
         def clear_document_bookmarks():
             # Check if bookmarks need to be cleared
             if isinstance(self.widget(emmited_tab_number), CustomEditor):
-                self.main_form.bookmarks.remove_editor_all(
-                    self.widget(emmited_tab_number)
-                )
+                self.main_form.bookmarks.remove_editor_all(self.widget(emmited_tab_number))
 
         # Store the tab reference
         tab = self.widget(emmited_tab_number)
@@ -821,9 +788,7 @@ QTabBar::tab:selected {{
             )
             movie.setCacheMode(qt.QMovie.CacheMode.CacheAll)
             if settings.get("custom_menu_scale") != None:
-                size = tuple(
-                    [(x * settings.get("custom_menu_scale") / 16) for x in (16, 16)]
-                )
+                size = tuple([(x * settings.get("custom_menu_scale") / 16) for x in (16, 16)])
             else:
                 size = (16, 16)
             movie.setScaledSize(functions.create_size(*size))
@@ -905,9 +870,7 @@ QTabBar::tab:selected {{
         # Disable drops
         new_scintilla_tab.setAcceptDrops(False)
         # Add needed signals
-        new_scintilla_tab.cursorPositionChanged.connect(
-            self._signal_editor_cursor_change
-        )
+        new_scintilla_tab.cursorPositionChanged.connect(self._signal_editor_cursor_change)
 
         # Customize the mouse click event for the plain document with a decorator
         def custom_mouse_click(function_to_decorate):
@@ -919,9 +882,7 @@ QTabBar::tab:selected {{
             return decorated_function
 
         # Add the custom click decorator to the mouse click function
-        new_scintilla_tab.mousePressEvent = custom_mouse_click(
-            new_scintilla_tab.mousePressEvent
-        )
+        new_scintilla_tab.mousePressEvent = custom_mouse_click(new_scintilla_tab.mousePressEvent)
         # Return the scintilla reference
         return new_scintilla_tab
 
@@ -965,9 +926,7 @@ QTabBar::tab:selected {{
                 # Set the lexer that colour codes the document
                 new_editor_tab.choose_lexer(file_type)
                 # Add the scintilla document to the tab widget
-                new_editor_tab_index = self.addTab(
-                    new_editor_tab, os.path.basename(document_name)
-                )
+                new_editor_tab_index = self.addTab(new_editor_tab, os.path.basename(document_name))
                 # Make the new tab visible
                 self.setCurrentIndex(new_editor_tab_index)
                 # Return the reference to the new added scintilla tab widget
@@ -1001,6 +960,8 @@ QTabBar::tab:selected {{
     terminal_count = 0
 
     def terminal_add(self):
+        from gui.terminal import Terminal
+
         name = "TERMINAL-{}".format(self.terminal_count)
         self.terminal_count += 1
         # Initialize the hex-view
@@ -1117,9 +1078,7 @@ QTabBar::tab:selected {{
             )
             return
         # Check if the source file already exists in the target basic widget
-        check_tab_widget, check_index = self.main_form.check_open_file(
-            source_widget.save_path
-        )
+        check_tab_widget, check_index = self.main_form.check_open_file(source_widget.save_path)
         if check_index is not None and check_tab_widget is self:
             # File is already open, focus it
             self.setCurrentIndex(check_index)
@@ -1154,9 +1113,7 @@ QTabBar::tab:selected {{
         # PlainEditor tabs should not evaluate its name
         if isinstance(moved_widget, CustomEditor) == True:
             # Check if the source file already exists in the target basic widget
-            check_tab_widget, check_index = self.main_form.check_open_file(
-                moved_widget.save_path
-            )
+            check_tab_widget, check_index = self.main_form.check_open_file(moved_widget.save_path)
             if check_index is not None and check_tab_widget is self:
                 # File is already open, focus it
                 self.setCurrentIndex(check_index)
@@ -1193,18 +1150,14 @@ QTabBar::tab:selected {{
         if isinstance(dragged_widget, CustomEditor) == True:
             # Check if the source file already exists
             # in the target basic widget
-            check_tab_widget, check_index = self.main_form.check_open_file(
-                dragged_widget.save_path
-            )
+            check_tab_widget, check_index = self.main_form.check_open_file(dragged_widget.save_path)
             if check_index is not None and check_tab_widget is self:
                 # File is already open, focus it
                 self.setCurrentIndex(check_index)
                 return
         # Move the custom editor widget from source to target
         source_tab_widget.removeTab(source_tab_widget.indexOf(dragged_widget))
-        new_index = self.addTab(
-            dragged_widget, dragged_widget_icon, dragged_widget_text
-        )
+        new_index = self.addTab(dragged_widget, dragged_widget_icon, dragged_widget_text)
 
         # Update source tab corner buttons
         def update_source(*args):

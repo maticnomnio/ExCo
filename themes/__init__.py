@@ -76,41 +76,31 @@ def __check_color_list(field, color_list, prior_keys):
 def __check_string(field, string, prior_keys):
     if not isinstance(string, str):
         raise Exception(
-            "[Themes] String error: {} / '{}'!".format(
-                "->".join(prior_keys + (field,)), string
-            )
+            "[Themes] String error: {} / '{}'!".format("->".join(prior_keys + (field,)), string)
         )
 
 
 def __check_bool(field, boolean, prior_keys):
     if not isinstance(boolean, bool):
         raise Exception(
-            "[Themes] Boolean error: {} / '{}'!".format(
-                "->".join(prior_keys + (field,)), boolean
-            )
+            "[Themes] Boolean error: {} / '{}'!".format("->".join(prior_keys + (field,)), boolean)
         )
 
 
 def __check_fields(schema, dictionary, prior_keys=()):
     for k, v in dictionary.items():
         try:
-            nested_schema_item = functools.reduce(
-                lambda seq, key: seq[key], prior_keys, schema
-            )
+            nested_schema_item = functools.reduce(lambda seq, key: seq[key], prior_keys, schema)
         except:
             raise Exception(
-                "[Themes] Unknown schema key: {} / '{}'!".format(
-                    "->".join(prior_keys + (k,)), v
-                )
+                "[Themes] Unknown schema key: {} / '{}'!".format("->".join(prior_keys + (k,)), v)
             )
         if isinstance(v, dict):
             __check_fields(schema, v, (*prior_keys, k))
         elif isinstance(v, int) and not isinstance(v, bool):
             if dictionary[k] != nested_schema_item[k]:
                 raise Exception(
-                    "[Themes] Integer error: {} / '{}'!".format(
-                        "->".join(prior_keys + (k,)), v
-                    )
+                    "[Themes] Integer error: {} / '{}'!".format("->".join(prior_keys + (k,)), v)
                 )
         else:
             try:

@@ -20,6 +20,7 @@ from typing import *
 import qt
 import data
 import functions
+import components.processcontroller
 
 
 DEBUG_MODE = False
@@ -130,7 +131,6 @@ class CommListener:
             ) as listener:
                 debug_echo(self, "Listening ...")
                 self.running = True
-                #                    listener._listener._socket.settimeout(1.0)
                 while self.running == True:
                     try:
                         conn = listener.accept()
@@ -138,7 +138,7 @@ class CommListener:
                     except socket.timeout:
                         pass
         except Exception as ex:
-            #            debug_echo(self, ex)
+            debug_echo(self, ex)
             self.running = False
             time.sleep(0.1)
             self.stopped_callback()
@@ -239,9 +239,6 @@ class FileCommunicator(qt.QObject):
     Object for communicating between processes using files
     """
 
-    # Constants
-    COMM_FILE = "exco_comm.json"
-
     # Signals
     received: qt.pyqtSignal = qt.pyqtSignal(object)
     __process_directory_queue: qt.pyqtSignal = qt.pyqtSignal()
@@ -257,7 +254,7 @@ class FileCommunicator(qt.QObject):
         super().__init__()
 
         self.__name = name
-        self.__comm_file_path = os.path.join(data.settings_directory, self.COMM_FILE)
+        self.__comm_file_path = components.processcontroller.inbox_path(os.getpid())
 
         self.__file_watcher = qt.QFileSystemWatcher(self)
         self.__file_watcher.directoryChanged.connect(self.__directory_changed)
@@ -295,6 +292,4 @@ class FileCommunicator(qt.QObject):
         finally:
             self.__processing_lock.release()
 
-    def send_data(self, _data):
-        with open(self.__comm_file_path, "w+", encoding="utf-8") as f:
-            f.write(json.dumps(_data, indent=4, ensure_ascii=False))
+

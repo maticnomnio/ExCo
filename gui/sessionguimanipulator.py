@@ -106,12 +106,8 @@ class SessionGuiManipulator(qt.QTreeView):
         self.node_icon_group = functions.create_icon("tango_icons/folder.png")
         self.node_icon_session = functions.create_icon("tango_icons/sessions.png")
         self.icon_session_add = functions.create_icon("tango_icons/session-add.png")
-        self.icon_session_remove = functions.create_icon(
-            "tango_icons/session-remove.png"
-        )
-        self.icon_session_overwrite = functions.create_icon(
-            "tango_icons/session-overwrite.png"
-        )
+        self.icon_session_remove = functions.create_icon("tango_icons/session-remove.png")
+        self.icon_session_overwrite = functions.create_icon("tango_icons/session-overwrite.png")
         self.icon_group_add = functions.create_icon("tango_icons/folder-add.png")
         self.icon_session_edit = functions.create_icon("tango_icons/session-edit.png")
         # Connect the signals
@@ -205,9 +201,7 @@ class SessionGuiManipulator(qt.QTreeView):
                 settings.get_sessions().store_sessions()
                 # Display successful group deletion
                 self.main_form.display.repl_display_message(
-                    "Group '{}' was renamed to '{}'!".format(
-                        old_group_name, new_group_name
-                    ),
+                    "Group '{}' was renamed to '{}'!".format(old_group_name, new_group_name),
                     message_type=constants.MessageType.SUCCESS,
                 )
                 # Refresh the session tree
@@ -322,10 +316,7 @@ class SessionGuiManipulator(qt.QTreeView):
                     return selected_item.parent()
                 else:
                     return None
-            elif (
-                selected_item.type == ItemType.GROUP
-                or selected_item.type == ItemType.EMPTY_GROUP
-            ):
+            elif selected_item.type == ItemType.GROUP or selected_item.type == ItemType.EMPTY_GROUP:
                 return selected_item
             else:
                 return None
@@ -482,9 +473,7 @@ class SessionGuiManipulator(qt.QTreeView):
                 selected_item.text(), self.__get_node_chain(selected_item)
             )
             # Adding a session that is already stored will overwrite it
-            self.main_form.sessions.add(
-                selected_session["name"], selected_session["chain"]
-            )
+            self.main_form.sessions.add(selected_session["name"], selected_session["chain"])
             # Refresh the tree
             self.refresh_display()
 
@@ -504,10 +493,7 @@ class SessionGuiManipulator(qt.QTreeView):
         selected_item = self.tree_model.itemFromIndex(self.selectedIndexes()[0])
 
         # Check the selected item type
-        if (
-            selected_item.type == ItemType.GROUP
-            or selected_item.type == ItemType.SESSION
-        ):
+        if selected_item.type == ItemType.GROUP or selected_item.type == ItemType.SESSION:
             selected_item.setEditable(True)
             selected_item.name = selected_item.text()
             self.__start_editing_item(selected_item)
@@ -540,9 +526,7 @@ class SessionGuiManipulator(qt.QTreeView):
                 item_group_node = self.SessionItem(in_group["name"])
                 item_group_node.setFont(font)
                 item_group_node.my_parent = self
-                item_group_node.name = (
-                    in_group["chain"][-1] if len(in_group["chain"]) > 0 else ""
-                )
+                item_group_node.name = in_group["chain"][-1] if len(in_group["chain"]) > 0 else ""
                 item_group_node.type = ItemType.GROUP
                 item_group_node.setEditable(False)
                 item_group_node.setIcon(self.node_icon_group)
@@ -553,9 +537,7 @@ class SessionGuiManipulator(qt.QTreeView):
             for g, v in sorted(in_group["groups"].items(), key=lambda x: x[0].lower()):
                 process_group(v, item_group_node)
             # Add the sessions
-            for s, v in sorted(
-                in_group["sessions"].items(), key=lambda x: x[0].lower()
-            ):
+            for s, v in sorted(in_group["sessions"].items(), key=lambda x: x[0].lower()):
                 item_session_node = self.SessionItem(s)
                 item_session_node.my_parent = self
                 item_session_node.name = s

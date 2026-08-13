@@ -19,9 +19,10 @@ import data
 import settings
 import time
 import lexers
+from lexers.baselexer import BaseLexer
 
 
-class Oberon(qt.QsciLexerCustom):
+class Oberon(BaseLexer):
     """
     Custom lexer for the Oberon/Oberon-2/Modula/Modula-2 programming languages
     """
@@ -91,12 +92,8 @@ class Oberon(qt.QsciLexerCustom):
         # Initialize superclass
         super().__init__()
         # Set the default style values
-        self.setDefaultColor(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["color"])
-        )
-        self.setDefaultPaper(
-            qt.QColor(settings.get_theme()["fonts"]["default"]["background"])
-        )
+        self.setDefaultColor(qt.QColor(settings.get_theme()["fonts"]["default"]["color"]))
+        self.setDefaultPaper(qt.QColor(settings.get_theme()["fonts"]["default"]["background"]))
         self.setDefaultFont(settings.get_editor_font())
         # Reset autoindentation style
         self.setAutoIndentStyle(0)
@@ -118,11 +115,6 @@ class Oberon(qt.QsciLexerCustom):
 
     def braceStyle(self):
         return self.styles["Default"]
-
-    def defaultFont(self, style):
-        return qt.QFont(
-            settings.get("current_font_name"), settings.get("current_font_size")
-        )
 
     def set_theme(self, theme):
         for style in self.styles:
@@ -172,8 +164,7 @@ class Oberon(qt.QsciLexerCustom):
             commenting = False
             stringing = False
             tokens = [
-                (token, len(bytearray(token, "utf-8")))
-                for token in self.splitter.findall(text)
+                (token, len(bytearray(token, "utf-8"))) for token in self.splitter.findall(text)
             ]
             # Check if there is a style(comment, string, ...) stretching on from the previous line
             if start != 0:
@@ -214,9 +205,7 @@ class Oberon(qt.QsciLexerCustom):
                 elif i > 1 and tokens[i - 2][0] == "MODULE":
                     # Module name (beginning)
                     setStyling(token[1], MOD)
-                elif (i > 1 and tokens[i - 2][0] == "END") and (
-                    len(tokens) - 1 >= i + 1
-                ):
+                elif (i > 1 and tokens[i - 2][0] == "END") and (len(tokens) - 1 >= i + 1):
                     # Module or procedure name (name)
                     if ";" in tokens[i + 1][0]:
                         # Procedure end

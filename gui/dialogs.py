@@ -25,6 +25,9 @@ Custom Yes/No dialog window
 
 
 class BaseDialog(qt.QDialog):
+    # Replaced by each subclass: list of (text, tooltip, state_enum, is_wide)
+    button_specs: list = []
+
     def __init__(self, text, dialog_type=None, parent=None):
         super().__init__(parent)
         # Set the internal state
@@ -41,15 +44,26 @@ class BaseDialog(qt.QDialog):
         self.update_style()
 
     def create_button_list(self):
-        raise Exception("[BaseDialog] This method needs to be overridden!")
+        std = settings.get("standard_button_size")
+        button_list = []
+        for text, tooltip, state_enum, is_wide in self.button_specs:
+            width = int(std * 1.5) if is_wide else std
+            button_list.append(
+                {
+                    "text": text,
+                    "size": (width, std),
+                    "tooltip": tooltip,
+                    "state": state_enum.value,
+                    "click-func": lambda *args, v=state_enum.value: self.done(v),
+                }
+            )
+        return tuple(button_list)
 
     def init_layout(self, text, dialog_type):
         self.button_cache = []
 
         # Create the main layout
-        main_layout = create_layout(
-            layout=LayoutType.Vertical, margins=(8, 8, 8, 8), spacing=4
-        )
+        main_layout = create_layout(layout=LayoutType.Vertical, margins=(8, 8, 8, 8), spacing=4)
         self.setLayout(main_layout)
 
         # Add the label
@@ -77,14 +91,12 @@ class BaseDialog(qt.QDialog):
             )
             if button["text"] is not None:
                 new_button.setText(button["text"])
-            if button["icon"] is not None:
+            if button.get("icon") is not None:
                 icon = functions.create_icon(button["icon"])
                 new_button.setIcon(button)
-                if button["size"] is not None:
+                if button.get("size") is not None:
                     new_button.setIconSize(
-                        qt.QSize(
-                            int(button["size"][0] * 0.8), int(button["size"][1] * 0.8)
-                        )
+                        qt.QSize(int(button["size"][0] * 0.8), int(button["size"][1] * 0.8))
                     )
             new_button.setToolTip(button["tooltip"])
             new_button.setStatusTip(button["tooltip"])
@@ -97,9 +109,7 @@ class BaseDialog(qt.QDialog):
             #                create_leave_func(button.font)
             #            )
             if button["size"] is not None:
-                new_button.setFixedSize(
-                    qt.QSize(int(button["size"][0]), int(button["size"][1]))
-                )
+                new_button.setFixedSize(qt.QSize(int(button["size"][0]), int(button["size"][1])))
 
             button_layout.addWidget(new_button)
             self.button_cache.append(new_button)
@@ -115,9 +125,7 @@ class BaseDialog(qt.QDialog):
     def __set_button_states(self, button_states):
         if len(button_states) != len(self.button_cache):
             raise Exception(
-                "Length mismatch: {} != {}".format(
-                    len(button_states), len(self.button_cache)
-                )
+                "Length mismatch: {} != {}".format(len(button_states), len(self.button_cache))
             )
         for i, item in enumerate(self.button_cache):
             item.set_focused(button_states[i])
@@ -237,274 +245,82 @@ QLabel {{
 
 
 class YesNoDialog(BaseDialog):
-    def create_button_list(self):
-        return (
-            {
-                "name": "yes",
-                "text": "Yes",
-                "icon": None,
-                "size": (
-                    settings.get("standard_button_size"),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Confirm the action",
-                "state": constants.DialogResult.Yes.value,
-                "click-func": lambda *args: self.done(constants.DialogResult.Yes.value),
-            },
-            {
-                "name": "no",
-                "text": "No",
-                "icon": None,
-                "size": (
-                    settings.get("standard_button_size"),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Decline the action",
-                "state": constants.DialogResult.No.value,
-                "click-func": lambda *args: self.done(constants.DialogResult.No.value),
-            },
-        )
+    button_specs = [
+        ("Yes", "Confirm the action", constants.DialogResult.Yes, False),
+        ("No", "Decline the action", constants.DialogResult.No, False),
+    ]
 
 
 class OkDialog(BaseDialog):
-    def create_button_list(self):
-        return (
-            {
-                "name": "ok",
-                "text": "OK",
-                "icon": None,
-                "size": (
-                    settings.get("standard_button_size"),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Close the dialog window",
-                "state": constants.DialogResult.No.value,
-                "click-func": lambda *args: self.done(constants.DialogResult.No.value),
-            },
-        )
+    button_specs = [
+        ("OK", "Close the dialog window", constants.DialogResult.No, False),
+    ]
 
 
 class DeleteDialog(BaseDialog):
-    def create_button_list(self):
-        return (
-            {
-                "name": "recycle-bin",
-                "text": "Move to\nRecycle Bin",
-                "icon": None,
-                "size": (
-                    int(settings.get("standard_button_size") * 1.5),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Send items to recycle bin (safer, can be recovered)",
-                "state": constants.DialogResult.RecycleBin.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.RecycleBin.value
-                ),
-            },
-            {
-                "name": "permanent",
-                "text": "Permanent\nDelete",
-                "icon": None,
-                "size": (
-                    int(settings.get("standard_button_size") * 1.5),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Permanently delete items (cannot be recovered)",
-                "state": constants.DialogResult.PermanentDelete.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.PermanentDelete.value
-                ),
-            },
-            {
-                "name": "cancel",
-                "text": "Cancel",
-                "icon": None,
-                "size": (
-                    settings.get("standard_button_size"),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Cancel the deletion",
-                "state": constants.DialogResult.Cancel.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.Cancel.value
-                ),
-            },
-        )
+    button_specs = [
+        (
+            "Move to\nRecycle Bin",
+            "Send items to recycle bin (safer, can be recovered)",
+            constants.DialogResult.RecycleBin,
+            True,
+        ),
+        (
+            "Permanent\nDelete",
+            "Permanently delete items (cannot be recovered)",
+            constants.DialogResult.PermanentDelete,
+            True,
+        ),
+        ("Cancel", "Cancel the deletion", constants.DialogResult.Cancel, False),
+    ]
 
 
 class CloseEditorDialog(BaseDialog):
-    def create_button_list(self):
-        return (
-            {
-                "name": "save-and-close",
-                "text": "Save \n&& Close",
-                "icon": None,
-                "size": (
-                    int(settings.get("standard_button_size") * 1.5),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Save document and close it",
-                "state": constants.DialogResult.SaveAndClose.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.SaveAndClose.value
-                ),
-            },
-            {
-                "name": "close",
-                "text": "Close",
-                "icon": None,
-                "size": (
-                    settings.get("standard_button_size"),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Close the document without saving",
-                "state": constants.DialogResult.Close.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.Close.value
-                ),
-            },
-            {
-                "name": "cancel",
-                "text": "Cancel",
-                "icon": None,
-                "size": (
-                    settings.get("standard_button_size"),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Cancel closing of the document",
-                "state": constants.DialogResult.Cancel.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.Cancel.value
-                ),
-            },
-        )
+    button_specs = [
+        (
+            "Save \n&& Close",
+            "Save document and close it",
+            constants.DialogResult.SaveAndClose,
+            True,
+        ),
+        ("Close", "Close the document without saving", constants.DialogResult.Close, False),
+        ("Cancel", "Cancel closing of the document", constants.DialogResult.Cancel, False),
+    ]
 
 
 class ToggleOneWindowDialog(BaseDialog):
-    def create_button_list(self):
-        return (
-            {
-                "name": "restore",
-                "text": "Restore",
-                "icon": None,
-                "size": (
-                    settings.get("standard_button_size"),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Restore the layout to the pre-one-window one",
-                "state": constants.DialogResult.Restore.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.Restore.value
-                ),
-            },
-            {
-                "name": "cancel",
-                "text": "Cancel",
-                "icon": None,
-                "size": (
-                    settings.get("standard_button_size"),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Cancel closing of the document",
-                "state": constants.DialogResult.Cancel.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.Cancel.value
-                ),
-            },
-        )
+    button_specs = [
+        (
+            "Restore",
+            "Restore the layout to the pre-one-window one",
+            constants.DialogResult.Restore,
+            False,
+        ),
+        ("Cancel", "Cancel closing of the document", constants.DialogResult.Cancel, False),
+    ]
 
 
 class QuitDialog(BaseDialog):
-    def create_button_list(self):
-        return (
-            {
-                "name": "save-and-quit",
-                "text": "Save all\n&& Quit",
-                "icon": None,
-                "size": (
-                    int(settings.get("standard_button_size") * 1.5),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Save all unsaved documents and quit ExCo",
-                "state": constants.DialogResult.SaveAllAndQuit.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.SaveAllAndQuit.value
-                ),
-            },
-            {
-                "name": "quit",
-                "text": "Quit",
-                "icon": None,
-                "size": (
-                    settings.get("standard_button_size"),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Quit ExCo without saving",
-                "state": constants.DialogResult.Quit.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.Quit.value
-                ),
-            },
-            {
-                "name": "cancel",
-                "text": "Cancel",
-                "icon": None,
-                "size": (
-                    settings.get("standard_button_size"),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Cancel quitting ExCo",
-                "state": constants.DialogResult.Cancel.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.Cancel.value
-                ),
-            },
-        )
+    button_specs = [
+        (
+            "Save all\n&& Quit",
+            "Save all unsaved documents and quit ExCo",
+            constants.DialogResult.SaveAllAndQuit,
+            True,
+        ),
+        ("Quit", "Quit ExCo without saving", constants.DialogResult.Quit, False),
+        ("Cancel", "Cancel quitting ExCo", constants.DialogResult.Cancel, False),
+    ]
 
 
 class RestoreSessionDialog(BaseDialog):
-    def create_button_list(self):
-        return (
-            {
-                "name": "save-and-restore",
-                "text": "Save \n&& Restore",
-                "icon": None,
-                "size": (
-                    int(settings.get("standard_button_size") * 1.5),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Save all documents and restore session",
-                "state": constants.DialogResult.SaveAndRestore.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.SaveAndRestore.value
-                ),
-            },
-            {
-                "name": "close",
-                "text": "Close",
-                "icon": None,
-                "size": (
-                    settings.get("standard_button_size"),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Restore the session without saving",
-                "state": constants.DialogResult.Restore.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.Close.value
-                ),
-            },
-            {
-                "name": "cancel",
-                "text": "Cancel",
-                "icon": None,
-                "size": (
-                    settings.get("standard_button_size"),
-                    settings.get("standard_button_size"),
-                ),
-                "tooltip": "Cancel restoring of the session",
-                "state": constants.DialogResult.Cancel.value,
-                "click-func": lambda *args: self.done(
-                    constants.DialogResult.Cancel.value
-                ),
-            },
-        )
+    button_specs = [
+        (
+            "Save \n&& Restore",
+            "Save all documents and restore session",
+            constants.DialogResult.SaveAndRestore,
+            True,
+        ),
+        ("Close", "Restore the session without saving", constants.DialogResult.Restore, False),
+        ("Cancel", "Cancel restoring of the session", constants.DialogResult.Cancel, False),
+    ]

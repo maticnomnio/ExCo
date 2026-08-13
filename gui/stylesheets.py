@@ -253,7 +253,7 @@ class StyleSheetFrame:
         background_color = settings.get_theme()["fonts"]["default"]["background"]
         if background_transparent:
             background_color = "transparent"
-        border = f'1px solid {settings.get_theme()["indication"]["passiveborder"]}'
+        border = f"1px solid {settings.get_theme()['indication']['passiveborder']}"
         if no_border:
             border = "none"
         style_sheet = f"""

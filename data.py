@@ -36,7 +36,7 @@ These are the DEFAULT values, override them in the user
 configuration file!
 --------------------------------------------------------
 """
-application_version = "7.10"
+application_version = "7.13"
 # Global variables
 command_line_options = None
 debug_mode = False
@@ -85,7 +85,7 @@ LIBRARY_VERSIONS = "PyQt{} / QScintilla{}".format(
 )
 
 # Store all Qt keys as a dictionary
-keys = {} 
+keys = {}
 
 global_function_information = {}
 

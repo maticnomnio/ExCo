@@ -116,9 +116,9 @@ class TreeSitterBaseLexer(BaseLexer):
         level = 0
         while True:
             if not came_up:
-                if cursor.node.start_byte > (
-                    start_byte - 50
-                ) and cursor.node.start_byte < (end_byte + 50):
+                if cursor.node.start_byte > (start_byte - 50) and cursor.node.start_byte < (
+                    end_byte + 50
+                ):
                     new_node = {
                         "type": cursor.node.type,
                         "start": cursor.node.start_byte,
@@ -196,10 +196,7 @@ class TreeSitterBaseLexer(BaseLexer):
             if spanning is None:
                 for kk, vv in self.symbols.items():
                     if _type in vv["items"]:
-                        if (
-                            "previous-special" in vv.keys()
-                            and previous_item is not None
-                        ):
+                        if "previous-special" in vv.keys() and previous_item is not None:
                             for ps in vv["previous-special"]:
                                 if ps[0] == previous_item["type"]:
                                     setStyling(length, self.symbols[ps[1]]["index"])

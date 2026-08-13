@@ -145,9 +145,7 @@ class HexView(qt.QFrame):
         for row_number, chunk in enumerate(chunks):
             if len(chunk) < size:
                 chunk_length = len(chunk)
-                chunk_list = [
-                    f"{chunk[i]:02x}" if i < chunk_length else " " for i in range(size)
-                ]
+                chunk_list = [f"{chunk[i]:02x}" if i < chunk_length else " " for i in range(size)]
             else:
                 chunk_list = [f"{c:02x}" for c in chunk]
             # Address
@@ -195,15 +193,9 @@ class HexView(qt.QFrame):
 
         # Table style
         for k, v in self.cache_table.items():
-            v.horizontalHeader().setSectionResizeMode(
-                qt.QHeaderView.ResizeMode.ResizeToContents
-            )
-            v.verticalScrollBar().setContextMenuPolicy(
-                qt.Qt.ContextMenuPolicy.NoContextMenu
-            )
-            v.horizontalScrollBar().setContextMenuPolicy(
-                qt.Qt.ContextMenuPolicy.NoContextMenu
-            )
+            v.horizontalHeader().setSectionResizeMode(qt.QHeaderView.ResizeMode.ResizeToContents)
+            v.verticalScrollBar().setContextMenuPolicy(qt.Qt.ContextMenuPolicy.NoContextMenu)
+            v.horizontalScrollBar().setContextMenuPolicy(qt.Qt.ContextMenuPolicy.NoContextMenu)
 
         # Rest
         for k, v in self.__cache_buttons.items():
@@ -257,14 +249,9 @@ class HexTableModel(qt.QAbstractTableModel):
             if column == self.__last_index:
                 return qt.Qt.AlignmentFlag.AlignLeft | qt.Qt.AlignmentFlag.AlignVCenter
             else:
-                return (
-                    qt.Qt.AlignmentFlag.AlignHCenter | qt.Qt.AlignmentFlag.AlignVCenter
-                )
+                return qt.Qt.AlignmentFlag.AlignHCenter | qt.Qt.AlignmentFlag.AlignVCenter
 
     def headerData(self, section, orientation, role=qt.Qt.ItemDataRole.DisplayRole):
-        if (
-            orientation == qt.Qt.Orientation.Horizontal
-            and role == qt.Qt.ItemDataRole.DisplayRole
-        ):
+        if orientation == qt.Qt.Orientation.Horizontal and role == qt.Qt.ItemDataRole.DisplayRole:
             return self.__headers[section]
         return super().headerData(section, orientation, role)

@@ -40,9 +40,7 @@ class ActionFilter(qt.QObject):
                 def click_and_drag():
                     def hide_parents(obj):
                         obj.hide()
-                        if obj.parent() != None and (
-                            isinstance(obj.parent(), gui.menu.Menu)
-                        ):
+                        if obj.parent() != None and (isinstance(obj.parent(), gui.menu.Menu)):
                             hide_parents(obj.parent())
 
                     hide_parents(receiver)
