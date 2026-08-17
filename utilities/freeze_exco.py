@@ -235,13 +235,22 @@ def main() -> int:
     # Other local modules imported lazily at runtime that the import-analysis
     # pass misses: gui/mainwindow/menubar.py -> libraryfunctions,
     # gui/thebox.py + gui/tabwidget.py + gui/mainwindow/view.py -> gui.terminal
-    for lazy_module in ("gui.terminal", "libraryfunctions"):
+    # (a package: terminal, view, backend, screen). List the submodules
+    # explicitly so the frozen app always carries the whole emulator.
+    for lazy_module in (
+        "gui.terminal",
+        "gui.terminal.terminal",
+        "gui.terminal.view",
+        "gui.terminal.backend",
+        "gui.terminal.screen",
+        "libraryfunctions",
+    ):
         if lazy_module not in includes:
             includes.append(lazy_module)
 
     # Third-party packages imported lazily at runtime on all platforms
     # (components/processcontroller.py + gui/externalprogram.py -> psutil,
-    # gui/terminal.py + gui/nimsuggest.py -> pyte)
+    # gui/terminal.py -> pyte)
     for lazy_package in ("psutil", "pyte"):
         if lazy_package not in packages_list:
             packages_list.append(lazy_package)

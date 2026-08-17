@@ -959,15 +959,19 @@ QTabBar::tab:selected {{
 
     terminal_count = 0
 
-    def terminal_add(self):
+    def terminal_add(self, shell=None):
         from gui.terminal import Terminal
 
         name = "TERMINAL-{}".format(self.terminal_count)
         self.terminal_count += 1
-        # Initialize the hex-view
-        new_terminal = Terminal(self, self.main_form, name)
+        # Initialize the terminal emulator
+        new_terminal = Terminal(self, self.main_form, name, shell=shell)
         tab_text = name
         new_terminal_tab_index = self.addTab(new_terminal, tab_text)
+        # Follow OSC title changes from the shell
+        new_terminal.title_changed.connect(
+            lambda title: self.setTabText(new_terminal_tab_index, title)
+        )
         # Make new tab visible
         self.setCurrentIndex(new_terminal_tab_index)
         return self.widget(new_terminal_tab_index)
@@ -995,9 +999,16 @@ QTabBar::tab:selected {{
         return self.widget(new_tree_tab_index)
 
     def terminal_emulator_add(self, tab_name, program):
-        new_external_tab = create_external_widget(self, self.main_form, program)
-        # Add the tree tab to the tab widget
-        new_tree_tab_index = self.addTab(new_external_tab, tab_name)
+        from gui.terminal import Terminal
+
+        new_terminal = Terminal(self, self.main_form, tab_name, shell=program)
+        # Add the terminal tab to the tab widget
+        new_terminal_tab_index = self.addTab(new_terminal, tab_name)
+        # Follow OSC title changes from the shell
+        new_terminal.title_changed.connect(
+            lambda title: self.setTabText(new_terminal_tab_index, title)
+        )
+        return self.widget(new_terminal_tab_index)
 
     def editor_update_margin(self):
         """

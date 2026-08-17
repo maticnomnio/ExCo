@@ -630,14 +630,6 @@ class FunctionWheel(qt.QFrame):
         # Create the list from which the hex buttons will be constructed
         button_list = [
             ButtonInfo(
-                "button_43",
-                geometries[next(gi)],
-                "tango_icons/utilities-terminal.png",
-                menubar_functions["special_run_command"],
-                "Run Console\nCommand",
-                input_no_document_focus_disable=False,
-            ),
-            ButtonInfo(
                 "button_44",
                 geometries[next(gi)],
                 "tango_icons/view-fullscreen.png",

@@ -2930,6 +2930,20 @@ class TreeExplorer(TreeDisplayBase):
                 TreeExplorer.ItemType.BASE_DIRECTORY,
             ]:
                 self.tree_menu.addAction(action_update_cwd)
+
+            # Copy root path to clipboard (base directory at the top of the view)
+            if item.attributes.itype in [
+                TreeExplorer.ItemType.BASE_DIRECTORY,
+                TreeExplorer.ItemType.DISK,
+            ]:
+                action_copy_root_path = qt.QAction(
+                    "Copy item path to clipboard", self.tree_menu
+                )
+                action_copy_root_path.triggered.connect(copy_item_path_to_clipboard)
+                action_copy_root_path.setIcon(
+                    functions.create_icon("tango_icons/edit-copy.png")
+                )
+                self.tree_menu.addAction(action_copy_root_path)
             # Separator
             self.tree_menu.addSeparator()
             # Cut item

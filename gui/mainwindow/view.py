@@ -740,8 +740,11 @@ QSplitter::handle {{
                                     new_tabs.hexview_add(file_path)
 
                             elif cls == "Terminal":
-                                new_terminal = new_tabs.terminal_add()
                                 working_path = widget_data[0]
+                                # Newer layouts persist the shell; fall back to
+                                # the default when restoring older ones.
+                                shell = widget_data[1] if len(widget_data) > 2 else None
+                                new_terminal = new_tabs.terminal_add(shell=shell)
                                 if working_path is not None and os.path.isdir(working_path):
                                     new_terminal.set_cwd(working_path)
 

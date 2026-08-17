@@ -1450,21 +1450,6 @@ def init_menubar(self) -> None:
             open_repl_history,
         )
 
-        # Special run command
-        def special_run_command() -> None:
-            self.repl.setText('run("",show_console=True)')
-            self.view.set_repl_type(constants.ReplType.SINGLE_LINE)
-            self.repl.setFocus()
-            self.repl.setCursorPosition(self.repl.text().find('",show_'))
-
-        run_command_action = create_action(
-            "Run command",
-            None,
-            "Run command as a new process (FULLY TESTED ONLY ON WINDOWS!)",
-            "tango_icons/utilities-terminal.png",
-            special_run_command,
-        )
-
         def create_cwd_tree() -> None:
             self.display.show_directory_tree(os.getcwd())
 
@@ -1485,18 +1470,6 @@ def init_menubar(self) -> None:
             "Open the current working directory in the operating systems explorer",
             "tango_icons/system-show-cwd.png",
             show_explorer,
-        )
-
-        def show_external_terminal() -> None:
-            self.repl.get_interpreter().create_terminal()
-
-        show_external_terminal_action = create_action(
-            "Show external Console/Terminal window",
-            None,
-            "Show an external OS's Console(Windows) / Terminal(Linux) "
-            + "window at the current working directory",
-            "tango_icons/utilities-terminal.png",
-            show_external_terminal,
         )
 
         # Edit the PATH environment variable
@@ -1536,12 +1509,27 @@ def init_menubar(self) -> None:
             window.terminal_add()
             window.currentWidget().setFocus()
 
+        terminal_shell = settings.get("terminal-shell")
+        if not isinstance(terminal_shell, str):
+            terminal_shell = " ".join(str(part) for part in terminal_shell)
         show_terminal_action = create_action(
-            "Show Terminal Emulator",
+            "Terminal Emulator ({})".format(terminal_shell),
             None,
             "Show an integrater Terminal Emulator",
             "tango_icons/utilities-terminal.png",
             show_terminal,
+        )
+
+        def show_external_terminal() -> None:
+            self.repl.get_interpreter().create_terminal()
+
+        show_external_terminal_action = create_action(
+            "External Terminal",
+            None,
+            "Show an external OS's Console(Windows) / Terminal(Linux) "
+            + "window at the current working directory",
+            "tango_icons/utilities-terminal.png",
+            show_external_terminal,
         )
         # Add the menu items
         system_menu.addSeparator()
@@ -1555,28 +1543,10 @@ def init_menubar(self) -> None:
         system_menu.addAction(show_new_explorer_tree_action)
         system_menu.addAction(show_explorer_action)
         system_menu.addSeparator()
-        system_menu.addAction(run_command_action)
         system_menu.addAction(show_terminal_action)
-        system_menu.addAction(show_external_terminal_action)
 
         # Terminals
         if data.platform == "Windows":
-            # CMD
-            def add_cmd_terminal_emulator() -> None:
-                terminal = self.get_helper_window().terminal_emulator_add(
-                    "Terminal - CMD", "cmd.exe"
-                )
-                self.get_helper_window().setCurrentWidget(terminal)
-
-            add_cmd_terminal_emulator_action = create_action(
-                "Add CMD Terminal",
-                None,
-                "Add a Windows CMD terminal emulator to the layout",
-                "tango_icons/utilities-terminal.png",
-                add_cmd_terminal_emulator,
-            )
-            system_menu.addAction(add_cmd_terminal_emulator_action)
-
             # PowerShell
             def add_powershell_terminal_emulator() -> None:
                 terminal = self.get_helper_window().terminal_emulator_add(
@@ -1585,13 +1555,15 @@ def init_menubar(self) -> None:
                 self.get_helper_window().setCurrentWidget(terminal)
 
             add_powershell_terminal_emulator_action = create_action(
-                "Add PowerShell Terminal",
+                "Terminal Emulator (Powershell)",
                 None,
                 "Add a Windows PowerShell terminal emulator to the layout",
                 "tango_icons/utilities-terminal.png",
                 add_powershell_terminal_emulator,
             )
             system_menu.addAction(add_powershell_terminal_emulator_action)
+
+        system_menu.addAction(show_external_terminal_action)
 
     # Lexers menu
     def construct_lexers_menu(parent: Menu) -> None:

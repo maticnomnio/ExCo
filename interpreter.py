@@ -490,7 +490,11 @@ class CustomInterpreter(code.InteractiveInterpreter):
             # Remove the PYTHONHOME environment variable that Nuitka creates. It causes problems
             # when running the systems python interpreter!
             os.environ["PYTHONHOME"] = ""
-            subprocess.Popen("cmd.exe")
+            # Spawn cmd in a fresh console, so a new window appears even when
+            # Ex.Co. itself is running from a console (otherwise the child
+            # would inherit the parent's console and nothing visible happens)
+            creationflags = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
+            subprocess.Popen("cmd.exe", creationflags=creationflags)
         else:
             # GNU/Linux (Lubuntu tested)
             try:

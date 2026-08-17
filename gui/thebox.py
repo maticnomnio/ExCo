@@ -208,6 +208,7 @@ class TheBox(qt.QSplitter):
                             j,
                             (
                                 w.current_working_directory,
+                                getattr(w.backend, "shell", None),
                                 w.internals.get_id(),
                             ),
                         )

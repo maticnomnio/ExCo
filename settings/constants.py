@@ -320,6 +320,10 @@ default_settings = {
         data.settings_directory, "repl_history.ini"
     ),
     "terminal": "x-terminal-emulator",  # Terminal console program used on GNU/Linux
+    "terminal-shell": "cmd.exe" if data.on_windows else "/bin/bash",  # Shell for the integrated terminal emulator
+    "terminal-history": 1000,  # Scrollback lines of the integrated terminal emulator
+    "terminal-font-name": None,  # Font for the integrated terminal emulator (None = editor font)
+    "terminal-font-size": None,  # Font size for the integrated terminal emulator (None = editor font size)
     "tree_display_icon_size": 16,  # Default tree display icon size
     "current_font_name": "Selawik",
     "current_font_size": 10,
