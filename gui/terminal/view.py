@@ -16,7 +16,7 @@ import functions
 import gui.menu
 import qt
 import settings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union, cast
 from wcwidth import wcwidth
 
 from gui.terminal.screen import ExtendedScreen
@@ -105,6 +105,15 @@ class TerminalView(qt.QWidget):
         # Visual bell flash state
         self._flash: bool = False
 
+        # Memo caches for cell style resolution (see _cell_style /
+        # _resolve_color); cleared on style reloads.
+        self._style_cache: Dict[
+            Tuple[Any, ...], Tuple[qt.QColor, qt.QColor, qt.QFont]
+        ] = {}
+        self._color_cache: Dict[str, qt.QColor] = {}
+        # Screen size at the last repaint scheduling (pixel-scroll guard)
+        self._last_screen_lines: int = 0
+
         # Scrollbar
         self._scrollbar: qt.QScrollBar = qt.QScrollBar(qt.Qt.Orientation.Vertical, self)
         self._scrollbar.setRange(0, 0)
@@ -156,6 +165,9 @@ class TerminalView(qt.QWidget):
         self._base_font: qt.QFont = qt.QFont(self._font)
         # Per-cell style font cache (see _cell_font)
         self._style_fonts = {}
+        # Memo caches (see _cell_style / _resolve_color)
+        self._style_cache = {}
+        self._color_cache = {}
         theme: Any = settings.get_theme()
         self._default_fg: qt.QColor = qt.QColor(theme["fonts"]["default"]["color"])
         self._default_bg: qt.QColor = qt.QColor(theme["fonts"]["default"]["background"])
@@ -255,11 +267,13 @@ class TerminalView(qt.QWidget):
             self._recompute_geometry()
             return
         history_len: int = self._history_len()
+        self._scrollbar.blockSignals(True)
         self._scrollbar.setRange(0, history_len)
         if not self._scrollbar.isSliderDown():
             # Leave the slider value alone while the user is dragging it so
             # new output does not fight the drag.
             self._scrollbar.setValue(history_len - self._scroll_offset)
+        self._scrollbar.blockSignals(False)
         visible: bool = self._scroll_offset > 0
         if visible != self._sb_visible:
             self._recompute_geometry()
@@ -280,17 +294,77 @@ class TerminalView(qt.QWidget):
         """
         screen: ExtendedScreen = self.terminal.screen
         dirty: Any = screen.dirty
+        edited: Set[int] = screen.edited
+        pending_scroll: int = screen.pending_scroll
         lines: int = screen.lines
         if self._in_alt():
             self._scroll_offset = 0
         if self._scroll_offset > 0:
             # History grew / content shifted; repaint everything visible.
             self.update()
+        elif (
+            pending_scroll != 0
+            and not self._flash
+            and lines == self._last_screen_lines
+            and self._char_height.is_integer()
+        ):
+            self._last_screen_lines = lines
+            delta: int = pending_scroll
+            if abs(delta) >= lines:
+                # The whole viewport was replaced; a pixel scroll has
+                # nothing to preserve.
+                self.update()
+            else:
+                # Pixel-scroll the backing store so the shifted content
+                # does not have to be re-rendered; only the newly exposed
+                # rows and the rows touched by the cursor / selection
+                # overlays are repainted.
+                row_px: int = int(self._char_height)
+                self.scroll(0, -delta * row_px)
+                if delta > 0:
+                    exposed: range = range(max(lines - delta, 0), lines)
+                else:
+                    exposed = range(0, min(-delta, lines))
+                for y in exposed:
+                    self.update(self._row_rect(y).toRect())
+            # Rows whose content changed within the chunk (prompt rewrites,
+            # spinner updates, ...) still need a full repaint.
+            for y in edited:
+                if 0 <= y < lines:
+                    self.update(self._row_rect(y).toRect())
+            # Cursor overlay: the old block cursor's pixels were shifted
+            # with the scroll and must be cleared.
+            old_cy: Optional[int] = self._last_cursor_y
+            if old_cy is not None:
+                shifted_cy: int = old_cy - delta
+                if 0 <= shifted_cy < lines:
+                    self.update(self._row_rect(shifted_cy).toRect())
+            cursor_y: int = screen.cursor.y
+            if not screen.cursor.hidden and 0 <= cursor_y < lines:
+                self.update(self._row_rect(cursor_y).toRect())
+            self._last_cursor_y = cursor_y if not screen.cursor.hidden else None
+            # Selection highlight is index-anchored while the blit moves
+            # the content through the stack; repaint the selection's rows
+            # and the rows its old highlight pixels landed on.
+            if self._selection is not None:
+                bounds: Optional[Selection] = self._selection_bounds()
+                if bounds is not None:
+                    r0: int
+                    c0: int
+                    r1: int
+                    c1: int
+                    r0, c0, r1, c1 = cast(Tuple[int, int, int, int], bounds)
+                    base: int = self._history_len() - self._scroll_offset
+                    for stack_row in range(r0, r1 + 1):
+                        for view_y in (stack_row - base, stack_row - base - delta):
+                            if 0 <= view_y < lines:
+                                self.update(self._row_rect(view_y).toRect())
         else:
+            self._last_screen_lines = lines
             for y in dirty:
                 if 0 <= y < lines:
                     self.update(self._row_rect(y).toRect())
-            cursor_y: int = screen.cursor.y
+            cursor_y = screen.cursor.y
             if screen.cursor.hidden or cursor_y != self._last_cursor_y:
                 # The cursor moved or vanished: repaint its previous cell so
                 # the old block cursor does not linger (pyte cursor moves do
@@ -300,6 +374,11 @@ class TerminalView(qt.QWidget):
                 self._last_cursor_y = cursor_y if not screen.cursor.hidden else None
             self.update(self._row_rect(cursor_y).toRect())
         dirty.clear()
+        edited.clear()
+        # The scroll delta is only meaningful for the chunk just fed; consume
+        # it so a second schedule_repaint in the same iteration does not
+        # pixel-scroll again.
+        screen.pending_scroll = 0
         self._refresh_scrollbar()
 
     def _on_blink(self) -> None:
@@ -316,7 +395,20 @@ class TerminalView(qt.QWidget):
             self._blink_phase = True
             return
         self._blink_phase = not self._blink_phase
-        self.update()
+        # Only the cursor cells (previous + current row) change on a blink
+        # toggle; no need to repaint the whole viewport.
+        lines: int = screen.lines
+        if self._last_cursor_y is not None and 0 <= self._last_cursor_y < lines:
+            self.update(self._row_rect(self._last_cursor_y).toRect())
+        if 0 <= screen.cursor.y < lines:
+            self.update(self._row_rect(screen.cursor.y).toRect())
+        # SGR-5 blink-attributed cells elsewhere on screen toggle with the
+        # phase too; repaint the rows that carry one (the scan is cheap and
+        # runs once per blink period).
+        for y in range(lines):
+            row: Any = screen.buffer.get(y)
+            if row is not None and any(cell.blink for cell in row.values()):
+                self.update(self._row_rect(y).toRect())
 
     def flash(self) -> None:
         """Visual bell: briefly lighten the viewport."""
@@ -340,9 +432,14 @@ class TerminalView(qt.QWidget):
             return self._default_fg if is_fg else self._default_bg
         if color_string == "default":
             return self._default_fg if is_fg else self._default_bg
-        if color_string.startswith("#"):
-            return qt.QColor(color_string)
-        return qt.QColor("#" + color_string)
+        color = self._color_cache.get(color_string)
+        if color is None:
+            if color_string.startswith("#"):
+                color = qt.QColor(color_string)
+            else:
+                color = qt.QColor("#" + color_string)
+            self._color_cache[color_string] = color
+        return color
 
     # ------------------------------------------------------------------
     # Painting
@@ -373,9 +470,11 @@ class TerminalView(qt.QWidget):
         cell_width: float = self._char_width
         cell_height: float = self._char_height
         x: int = 0
+        last_pen: Optional[qt.QColor] = None
+        last_font: Optional[qt.QFont] = None
         while x < columns:
             cell: Any = row[x]
-            style: Dict[str, Any] = self._cell_style(cell, y, x)
+            style: Tuple[qt.QColor, qt.QColor, qt.QFont] = self._cell_style(cell, y, x)
             run_text: List[str] = []
             run_start: int = x
             while x < columns:
@@ -398,10 +497,17 @@ class TerminalView(qt.QWidget):
                 (x - run_start) * cell_width,
                 cell_height,
             )
-            painter.fillRect(rect, style["bg"])
+            if style[1] != self._default_bg:
+                # The viewport background is already painted in paintEvent;
+                # only runs with a non-default background need a fill.
+                painter.fillRect(rect, style[1])
             if run_text:
-                painter.setPen(style["fg"])
-                painter.setFont(style["font"])
+                if style[0] != last_pen:
+                    painter.setPen(style[0])
+                    last_pen = style[0]
+                if style[2] != last_font:
+                    painter.setFont(style[2])
+                    last_font = style[2]
                 painter.drawText(
                     rect,
                     qt.Qt.AlignmentFlag.AlignLeft | qt.Qt.AlignmentFlag.AlignVCenter,
@@ -432,16 +538,34 @@ class TerminalView(qt.QWidget):
             self._style_fonts[key] = font
         return font
 
-    def _cell_style(self, cell: Any, y: int, x: int) -> Dict[str, Any]:
-        reverse: bool = cell.reverse
-        bg: qt.QColor = self._resolve_color(cell.bg, False)
-        fg: qt.QColor = self._resolve_color(cell.fg, True)
-        if reverse:
-            fg, bg = bg, fg
-        font: qt.QFont = self._cell_font(cell)
-        if self._is_selected(y, x):
-            fg, bg = bg, fg
-        return {"fg": fg, "bg": bg, "font": font}
+    def _cell_style(
+        self, cell: Any, y: int, x: int
+    ) -> Tuple[qt.QColor, qt.QColor, qt.QFont]:
+        key: Tuple[Any, ...] = (
+            cell.bg,
+            cell.fg,
+            cell.bold,
+            cell.italics,
+            cell.underscore,
+            cell.strikethrough,
+            cell.reverse,
+            self._is_selected(y, x),
+        )
+        style: Optional[Tuple[qt.QColor, qt.QColor, qt.QFont]] = self._style_cache.get(
+            key
+        )
+        if style is None:
+            reverse: bool = cell.reverse
+            bg: qt.QColor = self._resolve_color(cell.bg, False)
+            fg: qt.QColor = self._resolve_color(cell.fg, True)
+            if reverse:
+                fg, bg = bg, fg
+            font: qt.QFont = self._cell_font(cell)
+            if self._is_selected(y, x):
+                fg, bg = bg, fg
+            style = (fg, bg, font)
+            self._style_cache[key] = style
+        return style
 
     def _paint_cursor(self, painter: qt.QPainter) -> None:
         screen: ExtendedScreen = self.terminal.screen
@@ -677,9 +801,8 @@ class TerminalView(qt.QWidget):
             return
         if event.button() == qt.Qt.MouseButton.LeftButton:
             self._start_selection(event.position())
-        elif event.button() == qt.Qt.MouseButton.RightButton:
-            self._selection = None
-            self.update()
+        # A right-click keeps the selection so the context menu's Copy
+        # action stays enabled; the next left-press starts a new selection.
         # Accept the press so the ignored default QWidget handling does not
         # propagate it up to the tab widget (which would steal focus)
         event.accept()
@@ -843,6 +966,7 @@ class TerminalView(qt.QWidget):
             modifiers & qt.Qt.KeyboardModifier.ControlModifier
         )
         alt: qt.Qt.KeyboardModifier = modifiers & qt.Qt.KeyboardModifier.AltModifier
+        meta: qt.Qt.KeyboardModifier = modifiers & qt.Qt.KeyboardModifier.MetaModifier
 
         # Copy / paste
         if modifiers == (
@@ -917,7 +1041,26 @@ class TerminalView(qt.QWidget):
         elif key == qt.Qt.Key.Key_Backspace:
             output = "\x7f"
         elif key in (qt.Qt.Key.Key_Return, qt.Qt.Key.Key_Enter):
-            output = "\r"
+            if ctrl and not alt and not meta:
+                # Ctrl+Enter: Windows Terminal sends a line feed (Ctrl+J)
+                # here, and opencode binds Ctrl+J to insert a newline. The
+                # Windows console host does not translate a CSI-u Ctrl+Enter
+                # reliably, so follow the Windows Terminal convention.
+                output = "\n"
+            elif self.terminal.screen.keyboard_flags & 1 and (alt or shift or meta):
+                # Kitty keyboard protocol: a modified Enter arrives as
+                # CSI u (key 13 + XTerm-style modifier) so applications
+                # can tell it apart from a plain Enter.
+                mod_param = (
+                    1
+                    + (1 if shift else 0)
+                    + (2 if alt else 0)
+                    + (4 if ctrl else 0)
+                    + (8 if meta else 0)
+                )
+                output = "\x1b[13;{}u".format(mod_param)
+            else:
+                output = "\r"
         elif key in (qt.Qt.Key.Key_Tab, qt.Qt.Key.Key_Backtab):
             if shift:
                 output = "\x1b[Z"
@@ -939,7 +1082,15 @@ class TerminalView(qt.QWidget):
 
         # Ctrl+Alt+letter -> ESC + control code (e.g. Ctrl+Alt+C -> ESC 0x03).
         # Plain Alt would only prefix the printable text, losing the control.
-        if ctrl and alt and not shift and qt.Qt.Key.Key_A <= key <= qt.Qt.Key.Key_Z:
+        # Windows reports AltGr as Ctrl+Alt; when the layout produced a
+        # character (e.g. AltGr+F = "{" on some layouts), send it as-is.
+        if (
+            ctrl
+            and alt
+            and not shift
+            and qt.Qt.Key.Key_A <= key <= qt.Qt.Key.Key_Z
+            and not text
+        ):
             code = ord(chr(key).lower()) - ord("a") + 1
             self.send_text.emit("\x1b" + chr(code))
             event.accept()
@@ -951,8 +1102,10 @@ class TerminalView(qt.QWidget):
             event.accept()
             return
 
-        # Alt / Meta: prefix printable text with ESC.
-        if alt and text:
+        # Alt / Meta: prefix printable text with ESC. AltGr (Ctrl+Alt) is
+        # excluded so layout characters (e.g. AltGr+F = "{") pass through
+        # unmodified to the shell below.
+        if alt and not ctrl and not meta and text:
             self.send_text.emit("\x1b" + text)
             event.accept()
             return

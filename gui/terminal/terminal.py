@@ -73,6 +73,10 @@ class Terminal(qt.QWidget):
         )
         self.screen.set_mode(pyte.modes.DECAWM)
         self.stream: ExtendedStream = ExtendedStream(self.screen)
+        # Terminal-initiated responses (e.g. the Kitty keyboard protocol
+        # query reply) are written back to the PTY through the same path
+        # as user input.
+        self.stream.respond = self.__input_sent
 
         self.backend: Optional[TerminalBackend] = create_terminal_backend(
             shell=shell,

@@ -12,12 +12,13 @@ For complete license information of the dependencies, check the 'additional_lice
 ##        - Alternate screen (47 / 1047 / 1049)
 ##        - Mouse tracking modes (1000 / 1002 / 1003 / 1006)
 ##        - Bracketed paste (2004)
+##        - Kitty keyboard protocol (CSI > / < / ? u)
 ##        - OSC 0/1/2 title & icon, OSC 7 cwd, OSC 8 hyperlinks
 ##        - DECSCUSR cursor style
 ##        - Bell surfacing
 
 import copy
-from typing import Any, Dict, Generator, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple
 
 try:
     import pyte
@@ -52,6 +53,13 @@ class ExtendedScreen(pyte_screens.HistoryScreen):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        # Per-feed-chunk change tracking for the view's pixel-scroll fast
+        # path: pending_scroll is the number of viewport rows the content
+        # moved (positive = content up), edited holds the rows whose content
+        # changed for reasons other than a pure scroll shift. Initialized
+        # before super().__init__ because pyte's reset() runs during it.
+        self.pending_scroll: int = 0
+        self.edited: Set[int] = set()
         super().__init__(*args, **kwargs)
         # Alternate screen state
         self._alt_saved: Optional[Dict[str, Any]] = None
@@ -66,6 +74,9 @@ class ExtendedScreen(pyte_screens.HistoryScreen):
         self.cursor_blink: bool = True
         # Bell
         self.bell_triggered: bool = False
+        # Kitty keyboard protocol flags (0 = disabled); the view consults
+        # this when deciding how to encode modified keys.
+        self.keyboard_flags: int = 0
 
     # ------------------------------------------------------------------
     # Alternate screen
@@ -101,6 +112,7 @@ class ExtendedScreen(pyte_screens.HistoryScreen):
         self.margins = saved["margins"]
         self._alt_saved = None
         self.hyperlink_spans.clear()
+        self.edited.update(range(self.lines))
         self.dirty.update(range(self.lines))
 
     def set_mode(self, *modes: int, **kwargs: Any) -> None:
@@ -122,13 +134,55 @@ class ExtendedScreen(pyte_screens.HistoryScreen):
             if not self._alt_modes_active:
                 self._leave_alt_screen()
 
+    def _full_screen_margins(self) -> bool:
+        """True when the scrolling region spans the whole screen."""
+        top: int
+        bottom: int
+        top, bottom = self.margins or pyte_screens.Margins(0, self.lines - 1)
+        return top == 0 and bottom == self.lines - 1
+
     def index(self) -> None:
         # While the alternate screen is active, keep the scrollback history
         # frozen; scrolled-out lines simply disappear.
+        scrolled: bool = self._full_screen_margins() and self.cursor.y == self.lines - 1
         if self._alt_saved is None:
             super().index()
         else:
             pyte_screens.Screen.index(self)
+        if scrolled:
+            self.pending_scroll += 1
+
+    def reverse_index(self) -> None:
+        scrolled: bool = self._full_screen_margins() and self.cursor.y == 0
+        super().reverse_index()
+        if scrolled:
+            self.pending_scroll -= 1
+
+    def insert_lines(self, count: Optional[int] = None) -> None:
+        count = count or 1
+        top: int
+        bottom: int
+        top, bottom = self.margins or pyte_screens.Margins(0, self.lines - 1)
+        full: bool = top == 0 and bottom == self.lines - 1 and self.cursor.y == top
+        inside: bool = top <= self.cursor.y <= bottom
+        super().insert_lines(count)
+        if full:
+            self.pending_scroll -= count
+        elif inside:
+            self.edited.update(range(self.cursor.y, bottom + 1))
+
+    def delete_lines(self, count: Optional[int] = None) -> None:
+        count = count or 1
+        top: int
+        bottom: int
+        top, bottom = self.margins or pyte_screens.Margins(0, self.lines - 1)
+        full: bool = top == 0 and bottom == self.lines - 1 and self.cursor.y == top
+        inside: bool = top <= self.cursor.y <= bottom
+        super().delete_lines(count)
+        if full:
+            self.pending_scroll += count
+        elif inside:
+            self.edited.update(range(self.cursor.y, bottom + 1))
 
     def resize(
         self, lines: Optional[int] = None, columns: Optional[int] = None
@@ -192,6 +246,7 @@ class ExtendedScreen(pyte_screens.HistoryScreen):
     MAX_HYPERLINK_SPANS: int = 1000
 
     def draw(self, data: str) -> None:
+        self.edited.add(self.cursor.y)
         if self._active_hyperlink is not None:
             start: Tuple[int, int] = (self.cursor.y, self.cursor.x)
             super().draw(data)
@@ -229,18 +284,71 @@ class ExtendedScreen(pyte_screens.HistoryScreen):
     def bell(self, *args: Any) -> None:
         self.bell_triggered = True
 
+    # ------------------------------------------------------------------
+    # Content-edit tracking (see pending_scroll / edited)
+    # ------------------------------------------------------------------
+
+    def erase_in_line(self, how: int = 0, private: bool = False) -> None:
+        self.edited.add(self.cursor.y)
+        super().erase_in_line(how, private=private)
+
+    def erase_in_display(self, how: int = 0) -> None:
+        if how == 0:
+            interval: Any = range(self.cursor.y, self.lines)
+        elif how == 1:
+            interval = range(0, self.cursor.y + 1)
+        elif how == 2:
+            interval = range(0, self.lines)
+        else:
+            interval = [self.cursor.y]
+        self.edited.update(interval)
+        super().erase_in_display(how)
+
+    def erase_characters(self, count: Optional[int] = None) -> None:
+        self.edited.add(self.cursor.y)
+        super().erase_characters(count)
+
+    def insert_characters(self, count: Optional[int] = None) -> None:
+        self.edited.add(self.cursor.y)
+        super().insert_characters(count)
+
+    def delete_characters(self, count: Optional[int] = None) -> None:
+        self.edited.add(self.cursor.y)
+        super().delete_characters(count)
+
+    def reset(self) -> None:
+        self.edited.update(range(self.lines))
+        super().reset()
+
 
 class ExtendedStream(pyte_streams.Stream):
     """
-    pyte Stream with extra protocol support: DECSCUSR and OSC 7/8.
+    pyte Stream with extra protocol support: DECSCUSR, OSC 7/8 and the
+    Kitty keyboard protocol.
 
     The parser FSM is copied from pyte 0.8.2 (LGPL, see pyte license) with
-    two additions:
+    three additions:
       - the OSC branch dispatches to ``screen.osc(code, param)`` so OSC 7
         (cwd) and OSC 8 (hyperlinks) are surfaced;
       - a CSI ``... SP q`` sequence (DECSCUSR) is dispatched to
-        ``screen.set_cursor_style``.
+        ``screen.set_cursor_style``;
+      - the Kitty keyboard protocol sequences ``CSI > flags u``,
+        ``CSI < flags u`` and ``CSI ? u`` set ``screen.keyboard_flags``
+        and answer the query via ``respond``.
     """
+
+    def __init__(self, listener: Any) -> None:
+        super().__init__(listener)
+        # Optional callback writing terminal-initiated responses (e.g. the
+        # Kitty keyboard protocol query reply) back to the PTY.
+        self.respond: Optional[Callable[[str], None]] = None
+
+    def feed(self, data: str) -> None:
+        screen: Any = self.listener
+        if screen is not None:
+            screen.pending_scroll = 0
+            screen.edited.clear()
+        super().feed(data)
 
     def _parser_fsm(self) -> Generator[Optional[bool], str, None]:
         basic: Any = self.basic
@@ -348,15 +456,30 @@ class ExtendedStream(pyte_streams.Stream):
                                     params.append(min(int(current), 9999))
                                 listener.set_cursor_style(*params, private=private)
                         else:
-                            # '>' starts a private query (XTVERSION, DECRQM,
-                            # ...). Swallow the whole sequence - digits,
-                            # semicolons and the final letter - so it is not
-                            # drawn as visible text.
+                            # '>' starts the Kitty keyboard protocol push or
+                            # a private query (XTVERSION, DECRQM, ...).
+                            # Consume digits and semicolons, then react to
+                            # 'u' or swallow the rest so nothing is drawn as
+                            # visible text.
+                            flags: str = ""
+                            nxt = ""
                             while True:
                                 nxt = yield None
                                 if nxt.isdigit() or nxt == ";":
+                                    flags += nxt
                                     continue
                                 break
+                            if nxt == "u":
+                                current_flags: str = (flags.split(";") or [""])[-1]
+                                listener.keyboard_flags = int(current_flags or "1")
+                        break
+                    elif char == "<":
+                        # '<' pops the Kitty keyboard protocol.
+                        nxt = yield None
+                        while nxt.isdigit() or nxt == ";":
+                            nxt = yield None
+                        if nxt == "u":
+                            listener.keyboard_flags = 0
                         break
                     elif char in CAN_OR_SUB:
                         draw(char)
@@ -371,7 +494,13 @@ class ExtendedStream(pyte_streams.Stream):
                         if char == ";":
                             current = ""
                         else:
-                            if private:
+                            if private and char == "u":
+                                # Kitty keyboard protocol query (CSI ? u):
+                                # answer with the supported flags (1 =
+                                # disambiguate escape codes).
+                                if self.respond is not None:
+                                    self.respond("\x1b[>1u")
+                            elif private:
                                 csi_dispatch[char](*params, private=True)
                             else:
                                 csi_dispatch[char](*params)

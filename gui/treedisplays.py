@@ -181,7 +181,9 @@ class TreeDisplay(qt.QTreeView):
         # Set default font
         self.setFont(settings.get_current_font())
         # Initialize components
-        self.internals = components.internals.Internals(parent=parent, tab_widget=parent)
+        self.internals = components.internals.Internals(
+            parent=parent, tab_widget=parent
+        )
         # Store the reference to the parent
         self._parent = parent
         # Store the reference to the main form
@@ -360,18 +362,24 @@ class TreeDisplay(qt.QTreeView):
                 self.tree_menu.addSeparator()
 
                 # Clipboard copy name
-                clipboard_copy_action = qt.QAction("Copy directory name to clipboard", self)
+                clipboard_copy_action = qt.QAction(
+                    "Copy directory name to clipboard", self
+                )
 
                 def clipboard_copy():
                     cb = data.application.clipboard()
                     cb.clear(mode=cb.Mode.Clipboard)
                     cb.setText(item.text(), mode=cb.Mode.Clipboard)
 
-                clipboard_copy_action.setIcon(functions.create_icon("tango_icons/edit-copy.png"))
+                clipboard_copy_action.setIcon(
+                    functions.create_icon("tango_icons/edit-copy.png")
+                )
                 clipboard_copy_action.triggered.connect(clipboard_copy)
                 self.tree_menu.addAction(clipboard_copy_action)
                 # Clipboard copy path
-                clipboard_copy_path_action = qt.QAction("Copy directory path to clipboard", self)
+                clipboard_copy_path_action = qt.QAction(
+                    "Copy directory path to clipboard", self
+                )
 
                 def clipboard_copy():
                     cb = data.application.clipboard()
@@ -395,10 +403,14 @@ class TreeDisplay(qt.QTreeView):
                 if hasattr(item, "is_base") == True:
 
                     def update_to_parent():
-                        parent_directory = os.path.abspath(os.path.join(item.full_name, os.pardir))
+                        parent_directory = os.path.abspath(
+                            os.path.join(item.full_name, os.pardir)
+                        )
                         self.main_form.set_cwd(parent_directory)
 
-                    action_update_to_parent = qt.QAction("Update CWD to parent", self.tree_menu)
+                    action_update_to_parent = qt.QAction(
+                        "Update CWD to parent", self.tree_menu
+                    )
                     action_update_to_parent.triggered.connect(update_to_parent)
                     icon = functions.create_icon("tango_icons/update-cwd.png")
                     action_update_to_parent.setIcon(icon)
@@ -414,7 +426,9 @@ class TreeDisplay(qt.QTreeView):
 
                         qt.QTimer.singleShot(250, func)
 
-                    action_one_dir_up = qt.QAction("One directory up ..", self.tree_menu)
+                    action_one_dir_up = qt.QAction(
+                        "One directory up ..", self.tree_menu
+                    )
                     action_one_dir_up.triggered.connect(one_dir_up)
                     icon = functions.create_icon("tango_icons/one-dir-up.png")
                     action_one_dir_up.setIcon(icon)
@@ -447,7 +461,9 @@ class TreeDisplay(qt.QTreeView):
                         else:
                             subprocess.call(["xdg-open", item.full_name])
                     except:
-                        self.main_form.display.repl_display_error(traceback.format_exc())
+                        self.main_form.display.repl_display_error(
+                            traceback.format_exc()
+                        )
 
                 action_open = qt.QAction("Open with system", self.tree_menu)
                 action_open.triggered.connect(open_system)
@@ -501,11 +517,15 @@ class TreeDisplay(qt.QTreeView):
                     cb.clear(mode=cb.Mode.Clipboard)
                     cb.setText(item.text(), mode=cb.Mode.Clipboard)
 
-                clipboard_copy_action.setIcon(functions.create_icon("tango_icons/edit-copy.png"))
+                clipboard_copy_action.setIcon(
+                    functions.create_icon("tango_icons/edit-copy.png")
+                )
                 clipboard_copy_action.triggered.connect(clipboard_copy)
                 self.tree_menu.addAction(clipboard_copy_action)
                 # Clipboard copy path
-                clipboard_copy_path_action = qt.QAction("Copy file path to clipboard", self)
+                clipboard_copy_path_action = qt.QAction(
+                    "Copy file path to clipboard", self
+                )
 
                 def clipboard_copy():
                     cb = data.application.clipboard()
@@ -694,7 +714,9 @@ class TreeDisplay(qt.QTreeView):
         self.setModel(tree_model)
         self.setUniformRowHeights(True)
         # Add the file attributes to the tree display
-        description_brush = qt.QBrush(qt.QColor(settings.get_theme()["fonts"]["keyword"]["color"]))
+        description_brush = qt.QBrush(
+            qt.QColor(settings.get_theme()["fonts"]["keyword"]["color"])
+        )
         description_font = qt.QFont(
             settings.get("current_font_name"),
             settings.get("current_font_size"),
@@ -933,7 +955,9 @@ class TreeDisplay(qt.QTreeView):
         self.setModel(tree_model)
         self.setUniformRowHeights(True)
         # Add the file attributes to the tree display
-        description_brush = qt.QBrush(qt.QColor(settings.get_theme()["fonts"]["keyword"]["color"]))
+        description_brush = qt.QBrush(
+            qt.QColor(settings.get_theme()["fonts"]["keyword"]["color"])
+        )
         description_font = qt.QFont(
             settings.get("current_font_name"),
             settings.get("current_font_size"),
@@ -1169,7 +1193,9 @@ class TreeDisplay(qt.QTreeView):
                         node_cache[parent_string] = parent_node
                         parent_type_string = n.parent_type
                         if parent_type_string not in item_cache.keys():
-                            item = qt.QStandardItem("{}:".format(parent_type_string.upper()))
+                            item = qt.QStandardItem(
+                                "{}:".format(parent_type_string.upper())
+                            )
                             item.setEditable(False)
                             item.setForeground(label_brush)
                             item.setFont(label_font)
@@ -1192,7 +1218,9 @@ class TreeDisplay(qt.QTreeView):
         self.setModel(tree_model)
         self.setUniformRowHeights(True)
         # Add the file attributes to the tree display
-        description_brush = qt.QBrush(qt.QColor(settings.get_theme()["fonts"]["keyword"]["color"]))
+        description_brush = qt.QBrush(
+            qt.QColor(settings.get_theme()["fonts"]["keyword"]["color"])
+        )
         description_font = qt.QFont(
             settings.get("current_font_name"),
             settings.get("current_font_size"),
@@ -1247,8 +1275,12 @@ class TreeDisplay(qt.QTreeView):
         font_size: int = settings.get("current_font_size")
 
         # Create description styling (reused for header items)
-        description_brush: qt.QBrush = qt.QBrush(qt.QColor(theme["fonts"]["keyword"]["color"]))
-        description_font: qt.QFont = qt.QFont(font_name, font_size, qt.QFont.Weight.Bold)
+        description_brush: qt.QBrush = qt.QBrush(
+            qt.QColor(theme["fonts"]["keyword"]["color"])
+        )
+        description_font: qt.QFont = qt.QFont(
+            font_name, font_size, qt.QFont.Weight.Bold
+        )
 
         # Add document header
         document_name: str = os.path.basename(custom_editor.save_path)
@@ -1334,7 +1366,9 @@ class TreeDisplay(qt.QTreeView):
         self.setModel(tree_model)
         self.setUniformRowHeights(True)
         # Add the file attributes to the tree display
-        description_brush = qt.QBrush(qt.QColor(settings.get_theme()["fonts"]["keyword"]["color"]))
+        description_brush = qt.QBrush(
+            qt.QColor(settings.get_theme()["fonts"]["keyword"]["color"])
+        )
         description_font = qt.QFont(
             settings.get("current_font_name"),
             settings.get("current_font_size"),
@@ -1406,7 +1440,9 @@ class TreeDisplay(qt.QTreeView):
                     )
                     item_imports_node.appendRow(item_module_node)
             if new_node.types != []:
-                item_types_node = create_tree_node("TYPES:", label_brush, label_font, None, None)
+                item_types_node = create_tree_node(
+                    "TYPES:", label_brush, label_font, None, None
+                )
                 appending_node.appendRow(item_types_node)
                 # Sort the list by the name attribute
                 new_node.types.sort(key=get_case_insensitive_name)
@@ -1444,7 +1480,9 @@ class TreeDisplay(qt.QTreeView):
                     )
                     item_lets_node.appendRow(item_let_node)
             if new_node.vars != []:
-                item_vars_node = create_tree_node("VARIABLES:", label_brush, label_font, None, None)
+                item_vars_node = create_tree_node(
+                    "VARIABLES:", label_brush, label_font, None, None
+                )
                 appending_node.appendRow(item_vars_node)
                 # Sort the list by the name attribute
                 new_node.vars.sort(key=get_case_insensitive_name)
@@ -1560,7 +1598,9 @@ class TreeDisplay(qt.QTreeView):
                     item_properties_node.appendRow(item_property_node)
                     show_nim_node(None, item_property_node, property)
             if new_node.macros != []:
-                item_macros_node = create_tree_node("MACROS:", label_brush, label_font, None, None)
+                item_macros_node = create_tree_node(
+                    "MACROS:", label_brush, label_font, None, None
+                )
                 appending_node.appendRow(item_macros_node)
                 # Sort the list by the name attribute
                 new_node.macros.sort(key=get_case_insensitive_name)
@@ -1643,7 +1683,9 @@ class TreeDisplay(qt.QTreeView):
         self.setUniformRowHeights(True)
         """Define the description details"""
         # Font
-        description_brush = qt.QBrush(qt.QColor(settings.get_theme()["fonts"]["keyword"]["color"]))
+        description_brush = qt.QBrush(
+            qt.QColor(settings.get_theme()["fonts"]["keyword"]["color"])
+        )
         description_font = qt.QFont(
             settings.get("current_font_name"),
             settings.get("current_font_size"),
@@ -1682,7 +1724,9 @@ class TreeDisplay(qt.QTreeView):
         self.setUniformRowHeights(True)
         """Define the description details"""
         # Font
-        description_brush = qt.QBrush(qt.QColor(settings.get_theme()["fonts"]["default"]["color"]))
+        description_brush = qt.QBrush(
+            qt.QColor(settings.get_theme()["fonts"]["default"]["color"])
+        )
         description_font = qt.QFont(
             settings.get("current_font_name"),
             settings.get("current_font_size"),
@@ -1753,14 +1797,18 @@ class TreeDisplay(qt.QTreeView):
                 Adding the files
                 """
                 label_brush = qt.QBrush(
-                    qt.QColor(settings.get_theme()["fonts"]["singlequotedstring"]["color"])
+                    qt.QColor(
+                        settings.get_theme()["fonts"]["singlequotedstring"]["color"]
+                    )
                 )
                 label_font = qt.QFont(
                     settings.get("current_font_name"),
                     settings.get("current_font_size"),
                     qt.QFont.Weight.Bold,
                 )
-                item_brush = qt.QBrush(qt.QColor(settings.get_theme()["fonts"]["default"]["color"]))
+                item_brush = qt.QBrush(
+                    qt.QColor(settings.get_theme()["fonts"]["default"]["color"])
+                )
                 item_font = settings.get_current_font()
                 # Create the base directory item that will hold all of the found files
                 item_base_directory = qt.QStandardItem(directory)
@@ -1812,7 +1860,9 @@ class TreeDisplay(qt.QTreeView):
                             for dir in parsed_directory_list:
                                 # Check if the current loop directory already exists
                                 if dir in current_directory.directories:
-                                    current_directory = current_directory.directories[dir]
+                                    current_directory = current_directory.directories[
+                                        dir
+                                    ]
                             # Add the file to the directory
                             current_directory.add_file(file_name, item_file)
                     else:
@@ -1912,7 +1962,9 @@ class TreeDisplay(qt.QTreeView):
                 settings.get("current_font_size"),
                 qt.QFont.Weight.Bold,
             )
-            item_brush = qt.QBrush(qt.QColor(settings.get_theme()["fonts"]["default"]["color"]))
+            item_brush = qt.QBrush(
+                qt.QColor(settings.get_theme()["fonts"]["default"]["color"])
+            )
             item_font = settings.get_current_font()
             # Create the base directory item that will hold all of the found files
             item_base_directory = qt.QStandardItem(directory)
@@ -2061,9 +2113,13 @@ class TreeDisplay(qt.QTreeView):
 
                     base_directory = item[0]
                     for _dir in item[1]:
-                        found_items.append(os.path.join(base_directory, _dir).replace("\\", "/"))
+                        found_items.append(
+                            os.path.join(base_directory, _dir).replace("\\", "/")
+                        )
                     for file in item[2]:
-                        found_items.append(os.path.join(base_directory, file).replace("\\", "/"))
+                        found_items.append(
+                            os.path.join(base_directory, file).replace("\\", "/")
+                        )
                 self.finished.emit(found_items)
 
         def completed(items):
@@ -2078,7 +2134,9 @@ class TreeDisplay(qt.QTreeView):
         self.worker_thread.finished.connect(completed)
         self.worker_thread.start()
 
-    def display_found_files(self, search_text: str, found_files: list, directory: str) -> None:
+    def display_found_files(
+        self, search_text: str, found_files: list, directory: str
+    ) -> None:
         """
         Display files that were found using the 'functions' module's
         find_files function
@@ -2165,7 +2223,9 @@ class TreeDisplay(qt.QTreeView):
                 )
                 self.main_form.display.write_to_statusbar(message, 2000)
                 # Display error in tree widget
-                brush = qt.QBrush(qt.QColor(settings.get_theme()["fonts"]["error"]["color"]))
+                brush = qt.QBrush(
+                    qt.QColor(settings.get_theme()["fonts"]["error"]["color"])
+                )
                 font = qt.QFont(
                     settings.get("current_font_name"),
                     settings.get("current_font_size"),
@@ -2188,7 +2248,9 @@ class TreeDisplay(qt.QTreeView):
                 self.main_form.display.repl_display_error(message)
                 self.main_form.display.write_to_statusbar(message, 2000)
                 # Display error in tree widget
-                brush = qt.QBrush(qt.QColor(settings.get_theme()["fonts"]["error"]["color"]))
+                brush = qt.QBrush(
+                    qt.QColor(settings.get_theme()["fonts"]["error"]["color"])
+                )
                 font = qt.QFont(
                     settings.get("current_font_name"),
                     settings.get("current_font_size"),
@@ -2229,7 +2291,9 @@ class TreeDisplay(qt.QTreeView):
         # Set the tree display type to NODE
         self.set_display_type(constants.TreeDisplayType.FILES_WITH_LINES)
         # Initialize and display the search options
-        tree_model = self._init_replace_in_files_options(search_text, replace_text, directory)
+        tree_model = self._init_replace_in_files_options(
+            search_text, replace_text, directory
+        )
         # Add the items with lines to the treeview
         self._add_items_with_lines_to_tree(tree_model, directory, replaced_files)
 
@@ -2243,7 +2307,10 @@ class TreeDisplayBase(qt.QTreeView):
     # Custom item delegate
     class CustomItemDelegate(qt.QStyledItemDelegate):
         def createEditor(
-            self, parent: qt.QWidget, option: qt.QStyleOptionViewItem, index: qt.QModelIndex
+            self,
+            parent: qt.QWidget,
+            option: qt.QStyleOptionViewItem,
+            index: qt.QModelIndex,
         ) -> qt.QWidget:
             editor = qt.QLineEdit(parent)
             editor.setStyleSheet(StyleSheetLineEdit.standard())
@@ -2253,7 +2320,10 @@ class TreeDisplayBase(qt.QTreeView):
             editor.setText(index.data())
 
         def setModelData(
-            self, editor: qt.QWidget, model: qt.QAbstractItemModel, index: qt.QModelIndex
+            self,
+            editor: qt.QWidget,
+            model: qt.QAbstractItemModel,
+            index: qt.QModelIndex,
         ) -> None:
             model.setData(index, editor.text())
 
@@ -2317,7 +2387,9 @@ class TreeDisplayBase(qt.QTreeView):
         self._parent = parent
         self.main_form = main_form
         self.name = name
-        self.internals = components.internals.Internals(parent=parent, tab_widget=parent)
+        self.internals = components.internals.Internals(
+            parent=parent, tab_widget=parent
+        )
         self.key_release_lock = False
         # Set the icon size for every node
         self.update_icon_size()
@@ -2541,7 +2613,9 @@ class TreeExplorer(TreeDisplayBase):
         self.proxy_model = qt.QSortFilterProxyModel()
         self.proxy_model.setSourceModel(self.model())
         self.proxy_model.setFilterCaseSensitivity(qt.Qt.CaseSensitivity.CaseInsensitive)
-        self.proxy_model.setRecursiveFilteringEnabled(True)  # Crucial for tree filtering
+        self.proxy_model.setRecursiveFilteringEnabled(
+            True
+        )  # Crucial for tree filtering
         self.setModel(self.proxy_model)
 
     @qt.pyqtSlot(str)
@@ -2611,7 +2685,8 @@ class TreeExplorer(TreeDisplayBase):
             if data.platform == "Windows":
                 attribute: int = win32api.GetFileAttributes(item)
                 hidden: bool = bool(
-                    attribute & (win32con.FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_SYSTEM)
+                    attribute
+                    & (win32con.FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_SYSTEM)
                 )
             else:
                 hidden = os.path.basename(item).startswith(".")
@@ -2636,7 +2711,10 @@ class TreeExplorer(TreeDisplayBase):
         searched_item: str = editor.text()
         root: qt.QStandardItem = self.model().invisibleRootItem()
         for it in self.iterate_items(root):
-            if it.text() == searched_item and it.attributes.itype == TreeExplorer.ItemType.FILE:
+            if (
+                it.text() == searched_item
+                and it.attributes.itype == TreeExplorer.ItemType.FILE
+            ):
                 self.setCurrentIndex(it.index())
                 break
             elif (
@@ -2656,7 +2734,10 @@ class TreeExplorer(TreeDisplayBase):
             self.added_item = None
         elif self.renamed_item is not None:
             # Reset item type back to original when cancelling rename
-            if self.renamed_item.attributes.itype == TreeExplorer.ItemType.RENAME_DIRECTORY:
+            if (
+                self.renamed_item.attributes.itype
+                == TreeExplorer.ItemType.RENAME_DIRECTORY
+            ):
                 self.renamed_item.attributes.itype = TreeExplorer.ItemType.DIRECTORY
             else:
                 self.renamed_item.attributes.itype = TreeExplorer.ItemType.FILE
@@ -2693,7 +2774,9 @@ class TreeExplorer(TreeDisplayBase):
                 item_text = "File"
             # Initialize the names
             old_name: str = item.attributes.path
-            new_name: str = os.path.join(os.path.dirname(item.attributes.path), item.text())
+            new_name: str = os.path.join(
+                os.path.dirname(item.attributes.path), item.text()
+            )
             # Check if the names are different
             old_name = functions.unixify_path_keep_symlink(old_name)
             new_name = functions.unixify_path_keep_symlink(new_name)
@@ -2707,7 +2790,9 @@ class TreeExplorer(TreeDisplayBase):
                     "{} '{}' already exits!".format(item_text, new_name),
                     message_type=constants.MessageType.ERROR,
                 )
-                self.display_directory(self.current_viewed_directory, scroll_restore=False)
+                self.display_directory(
+                    self.current_viewed_directory, scroll_restore=False
+                )
                 return
             # Rename the item
             try:
@@ -2721,9 +2806,13 @@ class TreeExplorer(TreeDisplayBase):
             except:
                 self.main_form.display.repl_display_error(traceback.format_exc())
                 self.main_form.display.repl_display_error(
-                    "Error while renaming {}: '{}'!".format(item_text.lower(), item.attributes.path)
+                    "Error while renaming {}: '{}'!".format(
+                        item_text.lower(), item.attributes.path
+                    )
                 )
-                self.display_directory(self.current_viewed_directory, scroll_restore=False)
+                self.display_directory(
+                    self.current_viewed_directory, scroll_restore=False
+                )
                 return
             # Finish editing and reset the view
             self.renamed_item = None
@@ -2787,19 +2876,19 @@ class TreeExplorer(TreeDisplayBase):
         # First check if the click was in an empty space
         # and create item actions accordingly
         if item is not None:
+            if hasattr(item, "attributes") == False:
+                return
+            elif item.attributes.hide_menu == True:
+                return
+
             # Open the current item
             def open_item():
                 self.open_item(item)
 
             title: str = "Open directory"
             icon: qt.QIcon = "tango_icons/document-open.png"
-            if hasattr(item, "attributes") == False:
-                return
-            elif item.attributes.hide_menu == True:
-                return
             if item.attributes.itype == TreeExplorer.ItemType.FILE:
                 title = "Open file"
-                icon = "tango_icons/document-open.png"
             open_action: qt.QAction = qt.QAction(title, self.tree_menu)
             open_action.triggered.connect(open_item)
             icon = functions.create_icon(icon)
@@ -2807,6 +2896,8 @@ class TreeExplorer(TreeDisplayBase):
             if item.attributes.itype in [
                 TreeExplorer.ItemType.FILE,
                 TreeExplorer.ItemType.DIRECTORY,
+                TreeExplorer.ItemType.BASE_DIRECTORY,
+                TreeExplorer.ItemType.DISK,
             ]:
                 self.tree_menu.addAction(open_action)
 
@@ -2820,6 +2911,7 @@ class TreeExplorer(TreeDisplayBase):
                 except:
                     self.main_form.display.repl_display_error(traceback.format_exc())
 
+            # Open with system
             if item.attributes.itype == TreeExplorer.ItemType.FILE:
                 action_open_system = qt.QAction("Open with system", self.tree_menu)
                 action_open_system.triggered.connect(open_system)
@@ -2827,6 +2919,7 @@ class TreeExplorer(TreeDisplayBase):
                 action_open_system.setIcon(icon)
                 self.tree_menu.addAction(action_open_system)
 
+                # Open with Hex-View
                 def open_hex():
                     if item.attributes.itype == TreeExplorer.ItemType.FILE:
                         file_path = item.attributes.path
@@ -2843,31 +2936,43 @@ class TreeExplorer(TreeDisplayBase):
                 icon = functions.create_icon("various/node_template.png")
                 action_open_hex.setIcon(icon)
                 self.tree_menu.addAction(action_open_hex)
-                # Open path in explorer
-                open_in_explorer_action = qt.QAction(self.open_in_explorer_text, self)
 
-                def open_in_explorer():
-                    path = item.attributes.path
+            # Open path in explorer
+            open_in_explorer_action = qt.QAction(self.open_in_explorer_text, self)
+
+            def open_in_explorer():
+                path = item.attributes.path
+                if item.attributes.itype == TreeExplorer.ItemType.FILE:
                     try:
                         result = functions.open_item_in_explorer(path)
                     except:
                         result = False
                     if result == False:
-                        main_form.display.repl_display_error(
+                        self.main_form.display.repl_display_error(
                             "Error opening path in explorer: {}".format(path)
                         )
+                else:
+                    try:
+                        if data.platform == "Windows":
+                            os.startfile(path)
+                        else:
+                            subprocess.call(["xdg-open", path])
+                    except:
+                        self.main_form.display.repl_display_error(
+                            traceback.format_exc()
+                        )
 
-                open_in_explorer_action.setIcon(
-                    functions.create_icon("tango_icons/document-open.png")
-                )
-                open_in_explorer_action.triggered.connect(open_in_explorer)
+            open_in_explorer_action.setIcon(
+                functions.create_icon("tango_icons/document-open.png")
+            )
+            open_in_explorer_action.triggered.connect(open_in_explorer)
+            if item.attributes.itype in [
+                TreeExplorer.ItemType.FILE,
+                TreeExplorer.ItemType.DIRECTORY,
+                TreeExplorer.ItemType.BASE_DIRECTORY,
+                TreeExplorer.ItemType.DISK,
+            ]:
                 self.tree_menu.addAction(open_in_explorer_action)
-            elif item.attributes.itype == TreeExplorer.ItemType.DIRECTORY:
-                action_open_system = qt.QAction(self.open_in_explorer_text, self.tree_menu)
-                action_open_system.triggered.connect(open_system)
-                icon = functions.create_icon("tango_icons/document-open.png")
-                action_open_system.setIcon(icon)
-                self.tree_menu.addAction(action_open_system)
 
             # Copy item name to clipboard
             def copy_item_name_to_clipboard():
@@ -2879,13 +2984,16 @@ class TreeExplorer(TreeDisplayBase):
                     'Copied to clipboard: "{}"'.format(text)
                 )
 
-            action_copy_clipboard = qt.QAction("Copy item name to clipboard", self.tree_menu)
+            action_copy_clipboard = qt.QAction(
+                "Copy item name to clipboard", self.tree_menu
+            )
             action_copy_clipboard.triggered.connect(copy_item_name_to_clipboard)
             icon = functions.create_icon("tango_icons/edit-copy.png")
             action_copy_clipboard.setIcon(icon)
             if item.attributes.itype in [
                 TreeExplorer.ItemType.FILE,
                 TreeExplorer.ItemType.DIRECTORY,
+                TreeExplorer.ItemType.BASE_DIRECTORY,
             ]:
                 self.tree_menu.addAction(action_copy_clipboard)
 
@@ -2899,13 +3007,17 @@ class TreeExplorer(TreeDisplayBase):
                     'Copied to clipboard: "{}"'.format(text)
                 )
 
-            action_copy_clipboard = qt.QAction("Copy item path to clipboard", self.tree_menu)
+            action_copy_clipboard = qt.QAction(
+                "Copy item path to clipboard", self.tree_menu
+            )
             action_copy_clipboard.triggered.connect(copy_item_path_to_clipboard)
             icon = functions.create_icon("tango_icons/edit-copy.png")
             action_copy_clipboard.setIcon(icon)
             if item.attributes.itype in [
                 TreeExplorer.ItemType.FILE,
                 TreeExplorer.ItemType.DIRECTORY,
+                TreeExplorer.ItemType.BASE_DIRECTORY,
+                TreeExplorer.ItemType.DISK,
             ]:
                 self.tree_menu.addAction(action_copy_clipboard)
 
@@ -2931,21 +3043,18 @@ class TreeExplorer(TreeDisplayBase):
             ]:
                 self.tree_menu.addAction(action_update_cwd)
 
-            # Copy root path to clipboard (base directory at the top of the view)
-            if item.attributes.itype in [
-                TreeExplorer.ItemType.BASE_DIRECTORY,
-                TreeExplorer.ItemType.DISK,
-            ]:
-                action_copy_root_path = qt.QAction(
-                    "Copy item path to clipboard", self.tree_menu
-                )
-                action_copy_root_path.triggered.connect(copy_item_path_to_clipboard)
-                action_copy_root_path.setIcon(
-                    functions.create_icon("tango_icons/edit-copy.png")
-                )
-                self.tree_menu.addAction(action_copy_root_path)
             # Separator
-            self.tree_menu.addSeparator()
+            if not self.tree_menu.isEmpty() and (
+                item.attributes.itype
+                in [
+                    TreeExplorer.ItemType.FILE,
+                    TreeExplorer.ItemType.DIRECTORY,
+                    TreeExplorer.ItemType.BASE_DIRECTORY,
+                ]
+                or TreeExplorer.cut_items is not None
+                or TreeExplorer.copy_items is not None
+            ):
+                self.tree_menu.addSeparator()
             # Cut item
             cut_items_action = qt.QAction("Cut", self.tree_menu)
             cut_items_action.triggered.connect(self.__cut_items)
@@ -2964,6 +3073,7 @@ class TreeExplorer(TreeDisplayBase):
             if item.attributes.itype in [
                 TreeExplorer.ItemType.FILE,
                 TreeExplorer.ItemType.DIRECTORY,
+                TreeExplorer.ItemType.BASE_DIRECTORY,
             ]:
                 self.tree_menu.addAction(copy_item_action)
             # Paste item
@@ -2971,52 +3081,48 @@ class TreeExplorer(TreeDisplayBase):
             paste_item_action.triggered.connect(self.__paste_items)
             icon = functions.create_icon("tango_icons/edit-paste.png")
             paste_item_action.setIcon(icon)
-            if item.attributes.itype in [
-                TreeExplorer.ItemType.FILE,
-                TreeExplorer.ItemType.DIRECTORY,
-                TreeExplorer.ItemType.BASE_DIRECTORY,
-            ]:
-                if TreeExplorer.cut_items is not None or TreeExplorer.copy_items is not None:
-                    self.tree_menu.addAction(paste_item_action)
-            # Separator
-            self.tree_menu.addSeparator()
+            if (
+                TreeExplorer.cut_items is not None
+                or TreeExplorer.copy_items is not None
+            ):
+                self.tree_menu.addAction(paste_item_action)
 
             # Rename item
-            def rename_item():
-                if len(self.selectedIndexes()) > 1:
-                    self.main_form.display.display_warning(
-                        "Renaming allows only one item at a time!"
-                    )
-                    return
-                item.setEditable(True)
-                if item.attributes.itype == TreeExplorer.ItemType.DIRECTORY:
-                    item.attributes.itype = TreeExplorer.ItemType.RENAME_DIRECTORY
-                else:
-                    item.attributes.itype = TreeExplorer.ItemType.RENAME_FILE
-                index = item.index()
-                self.scrollTo(index)
-                # Start editing the new empty directory name
-                self.start_editing_item(index)
-                self.renamed_item = item
+            if item.attributes.itype in [
+                TreeExplorer.ItemType.FILE,
+                TreeExplorer.ItemType.DIRECTORY,
+            ]:
+                # Separator
+                self.tree_menu.addSeparator()
 
-            rename_item_action = qt.QAction("Rename", self.tree_menu)
-            rename_item_action.triggered.connect(rename_item)
-            icon = functions.create_icon("tango_icons/delete-end-line.png")
-            rename_item_action.setIcon(icon)
-            if item.attributes.itype in [
-                TreeExplorer.ItemType.FILE,
-                TreeExplorer.ItemType.DIRECTORY,
-            ]:
+                def rename_item():
+                    if len(self.selectedIndexes()) > 1:
+                        self.main_form.display.display_warning(
+                            "Renaming allows only one item at a time!"
+                        )
+                        return
+                    item.setEditable(True)
+                    if item.attributes.itype == TreeExplorer.ItemType.DIRECTORY:
+                        item.attributes.itype = TreeExplorer.ItemType.RENAME_DIRECTORY
+                    else:
+                        item.attributes.itype = TreeExplorer.ItemType.RENAME_FILE
+                    index = item.index()
+                    self.scrollTo(index)
+                    # Start editing the new empty directory name
+                    self.start_editing_item(index)
+                    self.renamed_item = item
+
+                rename_item_action = qt.QAction("Rename", self.tree_menu)
+                rename_item_action.triggered.connect(rename_item)
+                icon = functions.create_icon("tango_icons/delete-end-line.png")
+                rename_item_action.setIcon(icon)
                 self.tree_menu.addAction(rename_item_action)
-            # Delete item
-            delete_item_action = qt.QAction("Delete", self.tree_menu)
-            delete_item_action.triggered.connect(self.__delete_items)
-            icon = functions.create_icon("tango_icons/session-remove.png")
-            delete_item_action.setIcon(icon)
-            if item.attributes.itype in [
-                TreeExplorer.ItemType.FILE,
-                TreeExplorer.ItemType.DIRECTORY,
-            ]:
+
+                # Delete item
+                delete_item_action = qt.QAction("Delete", self.tree_menu)
+                delete_item_action.triggered.connect(self.__delete_items)
+                icon = functions.create_icon("tango_icons/session-remove.png")
+                delete_item_action.setIcon(icon)
                 self.tree_menu.addAction(delete_item_action)
         else:
             # Paste item
@@ -3024,11 +3130,15 @@ class TreeExplorer(TreeDisplayBase):
             paste_item_action.triggered.connect(self.__paste_items)
             icon = functions.create_icon("tango_icons/edit-paste.png")
             paste_item_action.setIcon(icon)
-            if TreeExplorer.cut_items is not None or TreeExplorer.copy_items is not None:
+            if (
+                TreeExplorer.cut_items is not None
+                or TreeExplorer.copy_items is not None
+            ):
                 self.tree_menu.addAction(paste_item_action)
         # Add the actions that are on every menu
         # Separator
-        self.tree_menu.addSeparator()
+        if not self.tree_menu.isEmpty():
+            self.tree_menu.addSeparator()
         # New file
         refresh_action = qt.QAction("Refresh view", self.tree_menu)
         refresh_action.triggered.connect(self.refresh)
@@ -3041,7 +3151,9 @@ class TreeExplorer(TreeDisplayBase):
             # Get the path
             path = self.current_viewed_directory
             # Create a new file item for editing
-            create_file_item = self.create_standard_item("", bold=False, icon=self.file_icon)
+            create_file_item = self.create_standard_item(
+                "", bold=False, icon=self.file_icon
+            )
             create_file_item.attributes = self.__create_item_attribute(
                 TreeExplorer.ItemType.NEW_FILE, path
             )
@@ -3064,7 +3176,9 @@ class TreeExplorer(TreeDisplayBase):
             # Get the path
             path = self.current_viewed_directory
             # Create a new directory item for editing
-            create_directory_item = self.create_standard_item("", bold=False, icon=self.folder_icon)
+            create_directory_item = self.create_standard_item(
+                "", bold=False, icon=self.folder_icon
+            )
             create_directory_item.attributes = self.__create_item_attribute(
                 TreeExplorer.ItemType.NEW_DIRECTORY, path
             )
@@ -3093,7 +3207,8 @@ class TreeExplorer(TreeDisplayBase):
                 items = TreeExplorer.copy_items
             else:
                 self.main_form.display.display_error(
-                    "Copy AND Cut items list is empty!\n" + "Cannot perform this action!"
+                    "Copy AND Cut items list is empty!\n"
+                    + "Cannot perform this action!"
                 )
                 return
             for it in items:
@@ -3150,6 +3265,7 @@ class TreeExplorer(TreeDisplayBase):
             if it.attributes.itype in [
                 TreeExplorer.ItemType.FILE,
                 TreeExplorer.ItemType.DIRECTORY,
+                TreeExplorer.ItemType.BASE_DIRECTORY,
             ]:
                 items.append(it.attributes)
         if len(items) == 0:
@@ -3188,7 +3304,9 @@ class TreeExplorer(TreeDisplayBase):
         for i in self.selectedIndexes():
             item: qt.QStandardItem = self.model().itemFromIndex(i)
             items.append(item.attributes)
-        message: str = "What would you like to do with the {} selected items?".format(len(items))
+        message: str = "What would you like to do with the {} selected items?".format(
+            len(items)
+        )
         reply: int = DeleteDialog.warning(message)
         if reply == constants.DialogResult.Cancel.value:
             return
@@ -3203,7 +3321,8 @@ class TreeExplorer(TreeDisplayBase):
 
             if functions.are_paths_same(path, self.current_viewed_directory):
                 self.main_form.display.repl_display_warning(
-                    "Cannot delete the path that you are currently viewing!\n" + f"  {path}"
+                    "Cannot delete the path that you are currently viewing!\n"
+                    + f"  {path}"
                 )
                 continue
             elif functions.is_parent_directory(
@@ -3244,7 +3363,9 @@ class TreeExplorer(TreeDisplayBase):
                         self.main_form.tools.pathwatcher_remove(path)
                 else:
                     self.main_form.display.repl_display_message(
-                        "Item '{}'\n does not seem to exist!!".format(item.attributes.path),
+                        "Item '{}'\n does not seem to exist!!".format(
+                            item.attributes.path
+                        ),
                         message_type=constants.MessageType.WARNING,
                     )
             except:
@@ -3291,6 +3412,7 @@ class TreeExplorer(TreeDisplayBase):
         if item.attributes.itype in [
             TreeExplorer.ItemType.DIRECTORY,
             TreeExplorer.ItemType.ONE_UP_DIRECTORY,
+            TreeExplorer.ItemType.BASE_DIRECTORY,
         ]:
             previous_directory: str | None = self.current_viewed_directory
             self._clean_model()
@@ -3302,7 +3424,9 @@ class TreeExplorer(TreeDisplayBase):
                     for it in self.iterate_items(root):
                         if it.text() == base_name:
                             self.setCurrentIndex(it.index())
-                            qt.QTimer.singleShot(0, lambda: self.scroll_and_ensure_item_visible(it))
+                            qt.QTimer.singleShot(
+                                0, lambda: self.scroll_and_ensure_item_visible(it)
+                            )
                             break
                 except:
                     traceback.print_exc()
@@ -3318,13 +3442,17 @@ class TreeExplorer(TreeDisplayBase):
         base_item: qt.QStandardItem = self.create_standard_item(
             "Computer", bold=False, icon=self.computer
         )
-        base_item.attributes = self.__create_item_attribute(TreeExplorer.ItemType.COMPUTER, None)
+        base_item.attributes = self.__create_item_attribute(
+            TreeExplorer.ItemType.COMPUTER, None
+        )
         tree_model.appendRow(base_item)
         drives: str = win32api.GetLogicalDriveStrings()
         drives_list: list[str] = drives.split("\000")[:-1]
         for d in drives_list:
             d = functions.unixify_path(d)
-            item: qt.QStandardItem = self.create_standard_item(d, bold=False, icon=self.disk_icon)
+            item: qt.QStandardItem = self.create_standard_item(
+                d, bold=False, icon=self.disk_icon
+            )
             item.attributes = self.__create_item_attribute(
                 TreeExplorer.ItemType.DIRECTORY, d, disk=True
             )
@@ -3346,7 +3474,9 @@ class TreeExplorer(TreeDisplayBase):
                 icon: qt.QIcon = self.folder_icon
                 if hidden:
                     icon = functions.change_icon_opacity(icon, 0.3)
-                item: qt.QStandardItem = self.create_standard_item(i, bold=False, icon=icon)
+                item: qt.QStandardItem = self.create_standard_item(
+                    i, bold=False, icon=icon
+                )
                 item.attributes = self.__create_item_attribute(
                     TreeExplorer.ItemType.DIRECTORY, full_path, hidden
                 )
@@ -3402,7 +3532,9 @@ class TreeExplorer(TreeDisplayBase):
         sd: tuple[str, str] = os.path.splitdrive(directory)
         base_item: qt.QStandardItem
         if disk == True:
-            base_item = self.create_standard_item(directory, bold=False, icon=self.disk_icon)
+            base_item = self.create_standard_item(
+                directory, bold=False, icon=self.disk_icon
+            )
             base_item.attributes = self.__create_item_attribute(
                 TreeExplorer.ItemType.DISK, directory
             )
@@ -3424,7 +3556,9 @@ class TreeExplorer(TreeDisplayBase):
             base_item.appendRow(up_item)
             tree_model.appendRow(base_item)
         else:
-            base_item = self.create_standard_item(sd[0], bold=False, icon=self.disk_icon)
+            base_item = self.create_standard_item(
+                sd[0], bold=False, icon=self.disk_icon
+            )
             base_item.attributes = self.__create_item_attribute(
                 TreeExplorer.ItemType.DISK, directory
             )
